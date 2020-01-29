@@ -10,3 +10,5 @@ COPY scripts /app/scripts
 COPY src /app/src
 
 EXPOSE 5000
+
+CMD ["./scripts/run-service.sh"]
