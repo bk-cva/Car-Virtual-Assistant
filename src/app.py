@@ -4,7 +4,7 @@ from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 
 from src.nlp.intent_classification.classify import classify_intent
-
+from src.nlp.ner.ner import ner
 
 app = Flask(__name__)
 gunicorn_logger = logging.getLogger('gunicorn.error')
@@ -30,10 +30,13 @@ def health_check_route():
     }), 200)
 
 
-@app.route('/intent', methods=['POST'])
-def get_intent():
+@app.route('/analyze', methods=['POST'])
+def analyze():
     body = request.get_json()
     texts = body['texts']
-    results = [classify_intent(text) for text in texts]
+    results = [{
+        'intent': classify_intent(text),
+        'entity': ner(text)
+    } for text in texts]
 
     return make_response(jsonify({'results': results}), 200)

@@ -10,5 +10,5 @@ class Intent(int, Enum):
 
 
 LOCATION_REGEX = ['ở đâu', 'chỗ nào']
-ROUTE_REGEX = ['chỉ đường']
+ROUTE_REGEX = ['chỉ đường', 'đưa tôi', 'cho tôi tới']
 ACTION_REGEX = ['bật', 'tắt', 'mở', 'đóng', 'giảm', 'tăng']
