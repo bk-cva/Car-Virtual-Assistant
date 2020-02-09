@@ -1,6 +1,6 @@
 import re
 
-from src.nlp.intent_classification.constants import Intent, LOCATION_REGEX, ACTION_REGEX
+from .constants import Intent, LOCATION_REGEX, ACTION_REGEX
 
 
 def classify_intent(text: str) -> Intent:

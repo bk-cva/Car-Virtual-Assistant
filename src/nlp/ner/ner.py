@@ -1,7 +1,7 @@
 import re
 from typing import Dict
 
-from src.nlp.ner.constants import PLACE_REGEX, STREET_REGEX, WARD_REGEX, DISTRICT_REGEX
+from .constants import PLACE_REGEX, STREET_REGEX, WARD_REGEX, DISTRICT_REGEX
 
 
 def ner(text: str) -> Dict:

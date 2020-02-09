@@ -3,8 +3,8 @@ import logging
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 
-from src.nlp.intent_classification.classify import classify_intent
-from src.nlp.ner.ner import ner
+from src.nlp import classify_intent
+from src.nlp import ner
 
 app = Flask(__name__)
 gunicorn_logger = logging.getLogger('gunicorn.error')
