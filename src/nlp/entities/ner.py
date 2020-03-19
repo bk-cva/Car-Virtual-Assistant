@@ -4,7 +4,7 @@ from typing import Dict
 from .constants import PLACE_REGEX, STREET_REGEX, WARD_REGEX, DISTRICT_REGEX
 
 
-def ner(text: str) -> Dict:
+def predict_entity(text: str) -> Dict:
     results = {}
     for place in PLACE_REGEX:
         pattern = '%s (.+)' % place

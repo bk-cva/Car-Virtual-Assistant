@@ -3,8 +3,7 @@ import logging
 from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 
-from src.nlp import classify_intent
-from src.nlp import ner
+from src.nlp import predict_intent, predict_entity
 
 app = Flask(__name__)
 gunicorn_logger = logging.getLogger('gunicorn.error')
@@ -35,8 +34,8 @@ def analyze():
     body = request.get_json()
     texts = body['texts']
     results = [{
-        'intent': classify_intent(text),
-        'entity': ner(text)
+        'intent': predict_intent(text),
+        'entity': predict_entity(text)
     } for text in texts]
 
     return make_response(jsonify({'results': results}), 200)
