@@ -8,8 +8,14 @@ class Intent(int, Enum):
     remind = 3
     control_door = 4
     control_window = 5
+    phone_call = 1000
+    phone_text = 1001
 
 
-LOCATION_REGEX = ['ở đâu', 'chỗ nào']
-ROUTE_REGEX = ['chỉ đường', 'đưa tôi', 'cho tôi tới']
-ACTION_REGEX = ['bật', 'tắt', 'mở', 'đóng', 'giảm', 'tăng']
+PHONE_CALL_REGEX = [
+    '^gọi',
+]
+PHONE_TEXT_REGEX = [
+    '^nhắn',
+    '^gửi tin',
+]
