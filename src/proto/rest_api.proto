@@ -1,0 +1,28 @@
+syntax = "proto2";
+
+message Request {
+  repeated string texts = 1;
+}
+
+message Response {
+  repeated PredictResult results = 1;
+  // Error when processing the request.
+  // If this field is not empty, it means there is a request wide error and the results
+  // should be empty.
+  optional Error error = 2;
+}
+
+message Error {
+  optional string error_message = 1;
+}
+
+message PredictResult {
+  required int32 intent_id = 1;
+  required string intent = 2;
+  repeated Entity entity = 3;
+}
+
+message Entity {
+  required string name = 1;
+  required string value = 2;
+}
