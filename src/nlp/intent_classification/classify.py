@@ -1,13 +1,20 @@
-import re
+import spacy
+import pickle
+import os.path
 
-from .constants import Intent, LOCATION_REGEX, ACTION_REGEX
+from .regexer import classify_by_regex
+from .constants import Intent
+
+CLASSIFIER_PATH = os.path.join(os.path.dirname(__file__), 'models', 'clf.sav')
+
+nlp = spacy.load('vi_spacy_model')
+clf = pickle.load(open(CLASSIFIER_PATH, mode='rb'))
 
 
-def classify_intent(text: str) -> Intent:
-    for pattern in LOCATION_REGEX:
-        if re.search(pattern, text, re.IGNORECASE):
-            return Intent.location
-    for pattern in ACTION_REGEX:
-        if re.search(pattern, text, re.IGNORECASE):
-            return Intent.action
-    return Intent.others
+def predict_intent(text: str) -> Intent:
+    """Predict intent of a string"""
+    regex_intent = classify_by_regex(text)
+    if regex_intent:
+        return Intent(regex_intent)
+    x = nlp(text).vector
+    return Intent(clf.predict([x])[0])

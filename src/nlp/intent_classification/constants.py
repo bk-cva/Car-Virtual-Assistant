@@ -2,11 +2,12 @@ from enum import Enum
 
 
 class Intent(int, Enum):
+    path = 0
     location = 1
-    route = 2
-    action = 3
-    config = 4
-    others = 5
+    music = 2
+    remind = 3
+    control_door = 4
+    control_window = 5
 
 
 LOCATION_REGEX = ['ở đâu', 'chỗ nào']

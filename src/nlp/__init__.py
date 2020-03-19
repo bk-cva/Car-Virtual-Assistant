@@ -1,2 +1,2 @@
 from .ner.ner import ner
-from .intent_classification.classify import classify_intent
+from .intent_classification.classify import predict_intent
