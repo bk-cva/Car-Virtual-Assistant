@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, jsonify, make_response, request
+from flask import Flask, jsonify, make_response, request as flask_request
 from flask_cors import CORS
 from google.protobuf import json_format
 
@@ -15,16 +15,12 @@ CORS(app)
 
 @app.errorhandler(404)
 def url_error(e):
-    response = rest_api_pb2.Response()
-    response.error.error_message = str(e)
-    return make_response(json_format.MessageToJson(response), 404)
+    return make_response(__make_json_response_error(str(e)), 404)
 
 
 @app.errorhandler(500)
 def server_error(e):
-    response = rest_api_pb2.Response()
-    response.error.error_message = str(e)
-    return make_response(json_format.MessageToJson(response), 500)
+    return make_response(__make_json_response_error(str(e)), 500)
 
 
 @app.route('/healthz', methods=['GET'])
@@ -36,8 +32,12 @@ def health_check_route():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    body = request.get_json()
-    texts = body['texts']
+    try:
+        proto_request = __extract_request(flask_request)
+    except Exception as ex:
+        return make_response(__make_json_response_error(str(ex)), 500)
+
+    texts = proto_request.texts
     results = []
     for text in texts:
         predict_result = rest_api_pb2.PredictResult()
@@ -50,3 +50,22 @@ def analyze():
     response = rest_api_pb2.Response()
     response.results.extend(results)
     return make_response(json_format.MessageToJson(response), 200)
+
+
+def __make_json_response_error(message):
+    res = rest_api_pb2.Response()
+    res.error.error_message = message
+    return json_format.MessageToJson(res)
+
+
+def __extract_request(flask_request):
+    if not flask_request.is_json:
+        raise ValueError('Expecting a json request.')
+
+    parsed_pb = json_format.Parse(flask_request.get_data(),
+                                  rest_api_pb2.Request())
+    # Checks required fields.
+    if not parsed_pb.texts:
+        raise ValueError('Expecting at least one document.')
+
+    return parsed_pb
