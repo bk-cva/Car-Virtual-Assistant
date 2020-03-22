@@ -3,6 +3,7 @@ from typing import List
 
 from .constants import PHONE_CALL_REGEX, PHONE_TEXT_REGEX
 from src.proto.rest_api_pb2 import Entity
+from .bert_ner import predict
 
 
 def predict_entity(text: str) -> List[Entity]:
@@ -32,4 +33,16 @@ def predict_entity(text: str) -> List[Entity]:
             results.append(entity2)
             break
 
-    return results
+    bert_predictions = predict(text)
+    bert_results = []
+    for bert_predict in bert_predictions:
+        if bert_predict[1] != 'O':
+            if bert_predict[1].startswith('B-'):
+                entity = Entity()
+                entity.name = bert_predict[1][2:]
+                entity.value = bert_predict[0]
+                bert_results.append(entity)
+            elif bert_predict[1].startswith('I-'):
+                bert_results[-1].value += ' ' + bert_predict[0]
+
+    return results + bert_results
