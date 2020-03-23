@@ -35,14 +35,14 @@ def predict_entity(text: str) -> List[Entity]:
 
     bert_predictions = predict(text)
     bert_results = []
-    for bert_predict in bert_predictions:
+    for i, bert_predict in enumerate(bert_predictions):
         if bert_predict[1] != 'O':
             if bert_predict[1].startswith('B-'):
                 entity = Entity()
                 entity.name = bert_predict[1][2:]
                 entity.value = bert_predict[0]
                 bert_results.append(entity)
-            elif bert_predict[1].startswith('I-'):
+            elif bert_predict[1].startswith('I-') and i > 0 and bert_predictions[i - 1][1].startswith('B-'):
                 bert_results[-1].value += ' ' + bert_predict[0]
 
     return results + bert_results
