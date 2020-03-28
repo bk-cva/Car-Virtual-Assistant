@@ -8,6 +8,10 @@ class Intent(int, Enum):
     remind = 3
     control_door = 4
     control_window = 5
+    control_aircon = 6
+    control_radio = 7
+    schedule = 8
+    request_news = 9
     phone_call = 1000
     phone_text = 1001
 
