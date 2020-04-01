@@ -7,7 +7,7 @@ from .bert_modeling import BertConfig, BertModel, get_assignment_map_from_checkp
 from .bert_tokenization import convert_to_unicode, FullTokenizer
 
 bert_config_file = os.path.join(os.path.dirname(__file__), 'models', 'bert_config.json')
-init_checkpoint = os.path.join(os.path.dirname(__file__), 'models', 'model.ckpt-121')
+init_checkpoint = tf.train.latest_checkpoint(os.path.join(os.path.dirname(__file__), 'models'))
 label2id = os.path.join(os.path.dirname(__file__), 'models', 'label2id.pkl')
 vocab_file = os.path.join(os.path.dirname(__file__), 'models', 'vocab.txt')
 output_dir = 'output'
@@ -57,13 +57,15 @@ class NerProcessor:
         "[PAD]" for padding
         :return:
         """
-        return ["[PAD]", "B-place", "I-place", "O", "B-place_name", "I-place_name", "B-info_type", "I-info_type",
-                "B-ward", "I-ward",
-                "B-street", "I-street", "B-district", "I-district", "B-place_property", "I-place_property", "B-time",
-                "I-time",
-                "B-address", "I-address", "B-personal_place", "I-personal_place", "B-route_property",
-                "I-route_property",
-                "X", "[CLS]", "[SEP]"]
+        return ['[PAD]', 'O', 'X', '[CLS]', '[SEP]', 'B-place', 'I-place', 'B-place_property', 'I-place_property',
+                'B-route_property', 'I-route_property', 'B-district', 'I-district', 'B-ward', 'I-ward',
+                'B-place_name', 'I-place_name', 'B-info_type', 'I-info_type', 'B-personal_place',
+                'B-street', 'I-street', 'I-personal_place', 'B-address', 'B-schedule_type', 'I-schedule_type',
+                'B-time', 'I-time', 'B-date', 'I-date', 'B-action_type', 'B-side', 'B-quantity',
+                'B-remind_content', 'I-remind_content', 'B-period', 'I-period', 'B-music_genre', 'I-music_genre',
+                'B-musician', 'I-musician', 'B-song_name', 'I-song_name', 'I-action_type', 'B-location',
+                'B-schedule_property', 'I-schedule_property', 'B-air_type', 'I-air_type', 'B-air_temp', 'I-air_temp',
+                'B-news_topic', 'I-news_topic', 'I-location', 'B-radio_channel', 'I-radio_channel']
 
     def _create_example(self, lines, set_type):
         examples = []

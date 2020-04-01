@@ -42,7 +42,7 @@ def predict_entity(text: str) -> List[Entity]:
                 entity.name = bert_predict[1][2:]
                 entity.value = bert_predict[0]
                 bert_results.append(entity)
-            elif bert_predict[1].startswith('I-') and i > 0 and bert_predictions[i - 1][1].startswith('B-'):
+            elif bert_predict[1].startswith('I-') and i > 0 and re.match(r'^[BI]-', bert_predictions[i - 1][1]):
                 bert_results[-1].value += ' ' + bert_predict[0]
 
     return results + bert_results
