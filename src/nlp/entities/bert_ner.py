@@ -3,13 +3,14 @@ import pickle
 from absl import logging
 import tensorflow as tf
 
+from ..common import MODEL_DIR
 from .bert_modeling import BertConfig, BertModel, get_assignment_map_from_checkpoint
 from .bert_tokenization import convert_to_unicode, FullTokenizer
 
-bert_config_file = os.path.join(os.path.dirname(__file__), 'models', 'bert_config.json')
-init_checkpoint = tf.train.latest_checkpoint(os.path.join(os.path.dirname(__file__), 'models'))
-label2id = os.path.join(os.path.dirname(__file__), 'models', 'label2id.pkl')
-vocab_file = os.path.join(os.path.dirname(__file__), 'models', 'vocab.txt')
+bert_config_file = os.path.join(MODEL_DIR, 'bert_config.json')
+init_checkpoint = tf.train.latest_checkpoint(MODEL_DIR)
+label2id = os.path.join(MODEL_DIR, 'label2id.pkl')
+vocab_file = os.path.join(MODEL_DIR, 'vocab.txt')
 output_dir = 'output'
 max_seq_length = 64
 do_lower_case = False

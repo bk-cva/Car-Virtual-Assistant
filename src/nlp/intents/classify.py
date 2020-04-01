@@ -2,10 +2,11 @@ import spacy
 import pickle
 import os.path
 
+from ..common import MODEL_DIR
 from .regexer import classify_by_regex
 from .constants import Intent
 
-CLASSIFIER_PATH = os.path.join(os.path.dirname(__file__), 'models', 'clf.sav')
+CLASSIFIER_PATH = os.path.join(MODEL_DIR, 'clf.sav')
 
 nlp = spacy.load('vi_spacy_model')
 clf = pickle.load(open(CLASSIFIER_PATH, mode='rb'))
