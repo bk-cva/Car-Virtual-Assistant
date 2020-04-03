@@ -3,7 +3,7 @@ from flask import Flask, jsonify, make_response, request as flask_request
 from flask_cors import CORS
 from google.protobuf import json_format
 
-from src.nlp import predict_intent, predict_entity
+from src.nlu import predict_intent, predict_entity
 from src.proto import rest_api_pb2
 
 app = Flask(__name__)
