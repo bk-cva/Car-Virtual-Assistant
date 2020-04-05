@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='src/proto/rest_api.proto',
   package='',
   syntax='proto2',
-  serialized_pb=_b('\n\x18src/proto/rest_api.proto\"\x18\n\x07Request\x12\r\n\x05texts\x18\x01 \x03(\t\"B\n\x08Response\x12\x1f\n\x07results\x18\x01 \x03(\x0b\x32\x0e.PredictResult\x12\x15\n\x05\x65rror\x18\x02 \x01(\x0b\x32\x06.Error\"\x1e\n\x05\x45rror\x12\x15\n\rerror_message\x18\x01 \x01(\t\"K\n\rPredictResult\x12\x11\n\tintent_id\x18\x01 \x02(\x05\x12\x0e\n\x06intent\x18\x02 \x02(\t\x12\x17\n\x06\x65ntity\x18\x03 \x03(\x0b\x32\x07.Entity\"%\n\x06\x45ntity\x12\x0c\n\x04name\x18\x01 \x02(\t\x12\r\n\x05value\x18\x02 \x02(\t')
+  serialized_pb=_b('\n\x18src/proto/rest_api.proto\"\x18\n\x07Request\x12\r\n\x05texts\x18\x01 \x03(\t\"B\n\x08Response\x12\x1f\n\x07results\x18\x01 \x03(\x0b\x32\x0e.PredictResult\x12\x15\n\x05\x65rror\x18\x02 \x01(\x0b\x32\x06.Error\"\x1e\n\x05\x45rror\x12\x15\n\rerror_message\x18\x01 \x01(\t\"K\n\rPredictResult\x12\x11\n\tintent_id\x18\x01 \x02(\x05\x12\x0e\n\x06intent\x18\x02 \x02(\t\x12\x17\n\x06\x65ntity\x18\x03 \x03(\x0b\x32\x07.Entity\"%\n\x06\x45ntity\x12\x0c\n\x04name\x18\x01 \x02(\t\x12\r\n\x05value\x18\x02 \x02(\t\"\'\n\x0eSuggestRequest\x12\n\n\x02\x61t\x18\x01 \x02(\t\x12\t\n\x01q\x18\x02 \x02(\t')
 )
 
 
@@ -207,6 +207,44 @@ _ENTITY = _descriptor.Descriptor(
   serialized_end=268,
 )
 
+
+_SUGGESTREQUEST = _descriptor.Descriptor(
+  name='SuggestRequest',
+  full_name='SuggestRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='at', full_name='SuggestRequest.at', index=0,
+      number=1, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='q', full_name='SuggestRequest.q', index=1,
+      number=2, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=270,
+  serialized_end=309,
+)
+
 _RESPONSE.fields_by_name['results'].message_type = _PREDICTRESULT
 _RESPONSE.fields_by_name['error'].message_type = _ERROR
 _PREDICTRESULT.fields_by_name['entity'].message_type = _ENTITY
@@ -215,6 +253,7 @@ DESCRIPTOR.message_types_by_name['Response'] = _RESPONSE
 DESCRIPTOR.message_types_by_name['Error'] = _ERROR
 DESCRIPTOR.message_types_by_name['PredictResult'] = _PREDICTRESULT
 DESCRIPTOR.message_types_by_name['Entity'] = _ENTITY
+DESCRIPTOR.message_types_by_name['SuggestRequest'] = _SUGGESTREQUEST
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Request = _reflection.GeneratedProtocolMessageType('Request', (_message.Message,), dict(
@@ -251,6 +290,13 @@ Entity = _reflection.GeneratedProtocolMessageType('Entity', (_message.Message,),
   # @@protoc_insertion_point(class_scope:Entity)
   ))
 _sym_db.RegisterMessage(Entity)
+
+SuggestRequest = _reflection.GeneratedProtocolMessageType('SuggestRequest', (_message.Message,), dict(
+  DESCRIPTOR = _SUGGESTREQUEST,
+  __module__ = 'src.proto.rest_api_pb2'
+  # @@protoc_insertion_point(class_scope:SuggestRequest)
+  ))
+_sym_db.RegisterMessage(SuggestRequest)
 
 
 # @@protoc_insertion_point(module_scope)

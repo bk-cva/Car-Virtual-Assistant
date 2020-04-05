@@ -1,5 +1,6 @@
 syntax = "proto2";
 
+// For NLU
 message Request {
   repeated string texts = 1;
 }
@@ -25,4 +26,10 @@ message PredictResult {
 message Entity {
   required string name = 1;
   required string value = 2;
+}
+
+// For Map
+message SuggestRequest {
+  required string at = 1;
+  required string q = 2;
 }

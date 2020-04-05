@@ -1,16 +1,23 @@
+import os
+import re
 import logging
 from flask import Flask, jsonify, make_response, request as flask_request
 from flask_cors import CORS
 from google.protobuf import json_format
+from dotenv import load_dotenv
 
 from src.nlu import predict_intent, predict_entity
 from src.proto import rest_api_pb2
+from src.map import HereSDK
 
+
+load_dotenv()
 app = Flask(__name__)
 gunicorn_logger = logging.getLogger('gunicorn.error')
 app.logger.handlers = gunicorn_logger.handlers
 app.logger.setLevel(gunicorn_logger.level)
 CORS(app)
+here_app = HereSDK(os.getenv('HERE_API_KEY'))
 
 
 @app.errorhandler(404)
@@ -33,7 +40,7 @@ def health_check_route():
 @app.route('/analyze', methods=['POST'])
 def analyze():
     try:
-        proto_request = __extract_request(flask_request)
+        proto_request = __extract_request(flask_request, rest_api_pb2.Request())
     except Exception as ex:
         return make_response(__make_json_response_error(str(ex)), 500)
 
@@ -52,20 +59,38 @@ def analyze():
     return make_response(json_format.MessageToJson(response), 200)
 
 
+@app.route('/map/suggest', methods=['POST'])
+def suggest():
+    try:
+        proto_request = __extract_request(flask_request, rest_api_pb2.SuggestRequest())
+        if not re.match(r'[\d.]+,[\d.]+', proto_request.at):
+            raise ValueError('`at` must be 2 floats separated by `,`')
+
+        at = list(map(float, proto_request.at.split(',')))
+        api_results = here_app.call_autosuggest(at, proto_request.q)
+        results = []
+        for api_res in api_results:
+            res = {'title': api_res.title, 'vicinity': api_res.vicinity, 'position': api_res.position,
+                   'distance': api_res.distance, 'resultType': api_res.resultType}
+            results.append(res)
+        return make_response({
+            'results': results,
+        }, 200)
+    except Exception as ex:
+        return make_response(__make_json_response_error(str(ex)), 500)
+
+
 def __make_json_response_error(message):
     res = rest_api_pb2.Response()
     res.error.error_message = message
     return json_format.MessageToJson(res)
 
 
-def __extract_request(flask_request):
+def __extract_request(flask_request, request_type):
     if not flask_request.is_json:
         raise ValueError('Expecting a json request.')
 
     parsed_pb = json_format.Parse(flask_request.get_data(),
-                                  rest_api_pb2.Request())
-    # Checks required fields.
-    if not parsed_pb.texts:
-        raise ValueError('Expecting at least one document.')
+                                  request_type)
 
     return parsed_pb
