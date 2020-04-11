@@ -1,1 +1,1 @@
-from .main import HereSDK
+from .here import HereSDK
