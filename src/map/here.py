@@ -1,14 +1,19 @@
+import os
 import requests
 import logging
 from requests.exceptions import HTTPError
 from typing import Tuple, List
-
+from dotenv import load_dotenv
 
 from .entities import SuggestionResult
 
 
 class HereSDK:
-    def __init__(self, api_key):
+    def __init__(self, api_key: str = None):
+        if api_key is None:
+            if not os.getenv('HERE_API_KEY'):
+                load_dotenv()
+            api_key = os.getenv('HERE_API_KEY')
         self.api_key = api_key
 
     def call_autosuggest(self, at: Tuple[float, float], q: str) -> List[SuggestionResult]:
