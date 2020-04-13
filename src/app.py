@@ -6,7 +6,7 @@ from flask_cors import CORS
 from google.protobuf import json_format
 from dotenv import load_dotenv
 
-from src.nlu import predict_intent, predict_entity
+from src.nlu import NLU
 from src.proto import rest_api_pb2
 from src.map import HereSDK
 
@@ -18,6 +18,7 @@ app.logger.handlers = gunicorn_logger.handlers
 app.logger.setLevel(gunicorn_logger.level)
 CORS(app)
 here_app = HereSDK(os.getenv('HERE_API_KEY'))
+nlu = NLU()
 
 
 @app.errorhandler(404)
@@ -48,10 +49,10 @@ def analyze():
     results = []
     for text in texts:
         predict_result = rest_api_pb2.PredictResult()
-        intent = predict_intent(text)
+        intent = nlu.predict_intent(text)
         predict_result.intent_id = intent
         predict_result.intent = intent.name
-        predict_result.entity.extend(predict_entity(text))
+        predict_result.entity.extend(nlu.predict_entity(text))
         results.append(predict_result)
 
     response = rest_api_pb2.Response()

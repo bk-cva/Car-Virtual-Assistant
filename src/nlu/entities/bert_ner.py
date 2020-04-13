@@ -25,7 +25,7 @@ class InputExample(object):
 
         Args:
           guid: Unique id for the example.
-          text_a: string. The untokenized text of the first sequence. For single
+          text: string. The untokenized text of the first sequence. For single
             sequence tasks, only this sequence must be specified.
           label: (Optional) string. The label of the example. This should be
             specified for train and dev examples, but not for test examples.
@@ -97,8 +97,7 @@ def convert_single_example(example, max_seq_length, tokenizer):
     # only Account for [CLS] with "- 1".
     if len(tokens) >= max_seq_length - 1:
         tokens = tokens[0:(max_seq_length - 1)]
-    ntokens = []
-    ntokens.append("[CLS]")
+    ntokens = ["[CLS]"]
     for token in tokens:
         ntokens.append(token)
     # after that we don't add "[SEP]" because we want a sentence don't have
@@ -106,7 +105,7 @@ def convert_single_example(example, max_seq_length, tokenizer):
     # or if add "[SEP]" the model even will cause problem, special the crf layer was used.
     input_ids = tokenizer.convert_tokens_to_ids(ntokens)
     mask = [1]*len(input_ids)
-    #use zero to padding and you should
+    # use zero to padding and you should
     while len(input_ids) < max_seq_length:
         input_ids.append(0)
         mask.append(0)
@@ -125,7 +124,7 @@ def hidden2tag(hiddenlayer, numclass):
     return linear(hiddenlayer)
 
 
-def crf_loss(logits, labels, mask, num_labels, mask2len):
+def crf_loss(logits, labels, num_labels, mask2len):
     """
     :param logits:
     :param labels:
@@ -179,84 +178,82 @@ def create_model(bert_config, is_training, input_ids, mask,
     logits = hidden2tag(output_layer, num_labels)
     logits = tf.reshape(logits, [-1, max_seq_length, num_labels])
     mask2len = tf.reduce_sum(mask, axis=1)
-    loss, trans = crf_loss(logits, labels, mask, num_labels, mask2len)
+    loss, trans = crf_loss(logits, labels, num_labels, mask2len)
     predict, viterbi_score = tf.contrib.crf.crf_decode(
         logits, trans, mask2len)
-    return (loss, logits, predict)
+    return loss, logits, predict
 
 
-logging.set_verbosity(logging.INFO)
-processors = {"ner": NerProcessor}
-bert_config = BertConfig.from_json_file(bert_config_file)
-if max_seq_length > bert_config.max_position_embeddings:
-    raise ValueError(
-        "Cannot use sequence length %d because the BERT model "
-        "was only trained up to sequence length %d" %
-        (max_seq_length, bert_config.max_position_embeddings))
-processor = processors['ner']()
+class BertNER:
+    def __init__(self):
+        bert_config = BertConfig.from_json_file(bert_config_file)
+        if max_seq_length > bert_config.max_position_embeddings:
+            raise ValueError(
+                "Cannot use sequence length %d because the BERT model "
+                "was only trained up to sequence length %d" %
+                (max_seq_length, bert_config.max_position_embeddings))
+        self.processor = NerProcessor()
 
-label_list = processor.get_labels()
+        label_list = self.processor.get_labels()
 
-tokenizer = FullTokenizer(
-    vocab_file=vocab_file, do_lower_case=False)
+        self.tokenizer = FullTokenizer(vocab_file=vocab_file, do_lower_case=False)
 
-input_ids = tf.placeholder(tf.int32, shape=[1, 64])
-mask = tf.placeholder(tf.int32, shape=[1, 64])
-segment_ids = tf.zeros(shape=[1, 64], dtype=tf.int32)
-label_ids = tf.zeros(shape=[1, 64], dtype=tf.int32)
-(total_loss, logits, predicts) = create_model(bert_config, False, input_ids,
-                                              mask, segment_ids, label_ids, len(label_list),
-                                              use_one_hot_embeddings=False)
-tvars = tf.trainable_variables()
-(assignment_map, initialized_variable_names) = get_assignment_map_from_checkpoint(
-    tvars, init_checkpoint)
-tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
-logging.info("**** Trainable Variables ****")
-for var in tvars:
-    init_string = ""
-    if var.name in initialized_variable_names:
-        init_string = ", *INIT_FROM_CKPT*"
-    logging.info("  name = %s, shape = %s%s", var.name, var.shape,
-                init_string)
+        self.input_ids = tf.placeholder(tf.int32, shape=[1, 64])
+        self.mask = tf.placeholder(tf.int32, shape=[1, 64])
+        segment_ids = tf.zeros(shape=[1, 64], dtype=tf.int32)
+        label_ids = tf.zeros(shape=[1, 64], dtype=tf.int32)
+        (*_, self.predicts) = create_model(bert_config, False, self.input_ids,
+                                           self.mask, segment_ids, label_ids, len(label_list),
+                                           use_one_hot_embeddings=False)
+        tvars = tf.trainable_variables()
+        (assignment_map, initialized_variable_names) = get_assignment_map_from_checkpoint(
+            tvars, init_checkpoint)
+        tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
+        logging.info("**** Trainable Variables ****")
+        for var in tvars:
+            init_string = ""
+            if var.name in initialized_variable_names:
+                init_string = ", *INIT_FROM_CKPT*"
+            logging.info("  name = %s, shape = %s%s", var.name, var.shape,
+                         init_string)
 
-sess = tf.Session()
-sess.run(tf.global_variables_initializer())
+        self.sess = tf.Session()
+        self.sess.run(tf.global_variables_initializer())
 
-with open(label2id, 'rb') as rf:
-    label2id = pickle.load(rf)
-    id2label = {value: key for key, value in label2id.items()}
+        with open(label2id, 'rb') as rf:
+            label2id_dict = pickle.load(rf)
+            self.id2label = {value: key for key, value in label2id_dict.items()}
 
+    def predict(self, item: str):
+        predict_examples = self.processor.get_test_examples(item)
 
-def predict(item: str):
-    predict_examples = processor.get_test_examples(item)
+        batch_tokens = []
+        batch_features = {
+            "input_ids": [],
+            "mask": [],
+        }
+        for example in predict_examples:
+            feature, ntokens = convert_single_example(example, max_seq_length, self.tokenizer)
+            batch_tokens.extend(ntokens)
+            batch_features["input_ids"].append(feature.input_ids)
+            batch_features["mask"].append(feature.mask)
 
-    batch_tokens = []
-    batch_features = {
-        "input_ids": [],
-        "mask": [],
-    }
-    for example in predict_examples:
-        feature, ntokens = convert_single_example(example, max_seq_length, tokenizer)
-        batch_tokens.extend(ntokens)
-        batch_features["input_ids"].append(feature.input_ids)
-        batch_features["mask"].append(feature.mask)
+        predictions = self.sess.run(self.predicts, {
+            self.input_ids: batch_features['input_ids'],
+            self.mask: batch_features['mask'],
+        })[0]
 
-    predictions = sess.run(predicts, {
-        input_ids: batch_features['input_ids'],
-        mask: batch_features['mask'],
-    })[0]
+        result = []
+        for i, prediction in enumerate(predictions):
+            token = batch_tokens[i]
+            predict = self.id2label[prediction]
+            if token != "[PAD]" and token != "[CLS]":
+                if token.startswith("##"):
+                    result[-1][0] += token[2:]
+                    continue
+                if predict == 'X':
+                    result[-1][0] += token
+                    continue
+                result.append([token, predict])
 
-    result = []
-    for i, prediction in enumerate(predictions):
-        token = batch_tokens[i]
-        predict = id2label[prediction]
-        if token != "[PAD]" and token != "[CLS]":
-            if token.startswith("##"):
-                result[-1][0] += token[2:]
-                continue
-            if predict == 'X':
-                result[-1][0] += token
-                continue
-            result.append([token, predict])
-
-    return result
+        return result
