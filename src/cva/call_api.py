@@ -1,16 +1,12 @@
-import os
 import requests
-from dotenv import load_dotenv
 
+from ..common.config_manager import ConfigManager
 from ..nlu.intents.constants import Intent
 from src.proto.rest_api_pb2 import Entity
 
 
-load_dotenv()
-
-
 def call_nlu(text: str):
-    nlu_url = os.getenv('NLU_URL')
+    nlu_url = ConfigManager().get('NLU_URL')
     res = requests.post(nlu_url, json={
         'texts': [text]
     }).json()['results'][0]

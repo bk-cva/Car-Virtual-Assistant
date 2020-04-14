@@ -4,20 +4,18 @@ import logging
 from flask import Flask, jsonify, make_response, request as flask_request
 from flask_cors import CORS
 from google.protobuf import json_format
-from dotenv import load_dotenv
 
 from src.nlu import NLU
 from src.proto import rest_api_pb2
 from src.map import HereSDK
 
 
-load_dotenv()
 app = Flask(__name__)
 gunicorn_logger = logging.getLogger('gunicorn.error')
 app.logger.handlers = gunicorn_logger.handlers
 app.logger.setLevel(gunicorn_logger.level)
 CORS(app)
-here_app = HereSDK(os.getenv('HERE_API_KEY'))
+here_app = HereSDK()
 nlu = NLU()
 
 
