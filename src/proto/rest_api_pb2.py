@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='src/proto/rest_api.proto',
   package='',
   syntax='proto2',
-  serialized_pb=_b('\n\x18src/proto/rest_api.proto\"\x18\n\x07Request\x12\r\n\x05texts\x18\x01 \x03(\t\"B\n\x08Response\x12\x1f\n\x07results\x18\x01 \x03(\x0b\x32\x0e.PredictResult\x12\x15\n\x05\x65rror\x18\x02 \x01(\x0b\x32\x06.Error\"\x1e\n\x05\x45rror\x12\x15\n\rerror_message\x18\x01 \x01(\t\"K\n\rPredictResult\x12\x11\n\tintent_id\x18\x01 \x02(\x05\x12\x0e\n\x06intent\x18\x02 \x02(\t\x12\x17\n\x06\x65ntity\x18\x03 \x03(\x0b\x32\x07.Entity\"%\n\x06\x45ntity\x12\x0c\n\x04name\x18\x01 \x02(\t\x12\r\n\x05value\x18\x02 \x02(\t\"\'\n\x0eSuggestRequest\x12\n\n\x02\x61t\x18\x01 \x02(\t\x12\t\n\x01q\x18\x02 \x02(\t')
+  serialized_pb=_b('\n\x18src/proto/rest_api.proto\"\x18\n\x07Request\x12\r\n\x05texts\x18\x01 \x03(\t\"B\n\x08Response\x12\x1f\n\x07results\x18\x01 \x03(\x0b\x32\x0e.PredictResult\x12\x15\n\x05\x65rror\x18\x02 \x01(\x0b\x32\x06.Error\"\x1e\n\x05\x45rror\x12\x15\n\rerror_message\x18\x01 \x01(\t\"8\n\rPredictResult\x12\x0e\n\x06intent\x18\x02 \x02(\t\x12\x17\n\x06\x65ntity\x18\x03 \x03(\x0b\x32\x07.Entity\"%\n\x06\x45ntity\x12\x0c\n\x04name\x18\x01 \x02(\t\x12\r\n\x05value\x18\x02 \x02(\t\"\'\n\x0eSuggestRequest\x12\n\n\x02\x61t\x18\x01 \x02(\t\x12\t\n\x01q\x18\x02 \x02(\t')
 )
 
 
@@ -133,21 +133,14 @@ _PREDICTRESULT = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='intent_id', full_name='PredictResult.intent_id', index=0,
-      number=1, type=5, cpp_type=1, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='intent', full_name='PredictResult.intent', index=1,
+      name='intent', full_name='PredictResult.intent', index=0,
       number=2, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='entity', full_name='PredictResult.entity', index=2,
+      name='entity', full_name='PredictResult.entity', index=1,
       number=3, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -166,7 +159,7 @@ _PREDICTRESULT = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=154,
-  serialized_end=229,
+  serialized_end=210,
 )
 
 
@@ -203,8 +196,8 @@ _ENTITY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=231,
-  serialized_end=268,
+  serialized_start=212,
+  serialized_end=249,
 )
 
 
@@ -241,8 +234,8 @@ _SUGGESTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=270,
-  serialized_end=309,
+  serialized_start=251,
+  serialized_end=290,
 )
 
 _RESPONSE.fields_by_name['results'].message_type = _PREDICTRESULT

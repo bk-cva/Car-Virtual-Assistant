@@ -48,7 +48,6 @@ def analyze():
     for text in texts:
         predict_result = rest_api_pb2.PredictResult()
         intent = nlu.predict_intent(text)
-        predict_result.intent_id = intent
         predict_result.intent = intent.name
         predict_result.entity.extend(nlu.predict_entity(text))
         results.append(predict_result)

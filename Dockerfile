@@ -1,4 +1,4 @@
-FROM python:3.7-slim
+FROM tensorflow/tensorflow:1.15.0-py3
 
 RUN apt-get update
 RUN apt install -y wget
@@ -12,10 +12,10 @@ COPY requirements.txt /app
 RUN pip install --no-cache -r requirements.txt
 
 RUN wget --no-check-certificate -O entities_models.tar.gz \
-    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212280\&authkey\=AHPfexVWvH2Ox-Q \
+    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212295\&authkey\=AKsz3xMJkeCZ1oU \
     && tar -xzvf entities_models.tar.gz
 RUN wget --no-check-certificate -O intents_models.tar.gz \
-    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212279\&authkey\=AMcmzuAiqU-75-I \
+    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212294\&authkey\=AGYoTi6QuIFCY1k \
     && tar -xzvf intents_models.tar.gz
 
 COPY scripts /app/scripts

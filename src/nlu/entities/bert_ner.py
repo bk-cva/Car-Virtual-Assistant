@@ -58,15 +58,17 @@ class NerProcessor:
         "[PAD]" for padding
         :return:
         """
-        return ['[PAD]', 'O', 'X', '[CLS]', '[SEP]', 'B-place', 'I-place', 'B-place_property', 'I-place_property',
-                'B-route_property', 'I-route_property', 'B-district', 'I-district', 'B-ward', 'I-ward',
-                'B-place_name', 'I-place_name', 'B-info_type', 'I-info_type', 'B-personal_place',
-                'B-street', 'I-street', 'I-personal_place', 'B-address', 'B-schedule_type', 'I-schedule_type',
-                'B-time', 'I-time', 'B-date', 'I-date', 'B-action_type', 'B-side', 'B-quantity',
-                'B-remind_content', 'I-remind_content', 'B-period', 'I-period', 'B-music_genre', 'I-music_genre',
-                'B-musician', 'I-musician', 'B-song_name', 'I-song_name', 'I-action_type', 'B-location',
-                'B-schedule_property', 'I-schedule_property', 'B-air_type', 'I-air_type', 'B-air_temp', 'I-air_temp',
-                'B-news_topic', 'I-news_topic', 'I-location', 'B-radio_channel', 'I-radio_channel']
+        return ['[PAD]', 'O', 'B-place', 'I-place',
+                'B-place_property', 'I-place_property', 'B-district', 'B-ward', 'I-ward',
+                'B-street', 'I-street', 'B-route_property', 'I-route_property', 'B-info_type',
+                'I-info_type', 'I-district', 'B-address', 'B-personal_place', 'I-personal_place',
+                'B-activity', 'I-activity', 'B-time', 'B-date', 'I-time', 'B-action_type', 'B-side',
+                'B-quantity', 'B-air_type', 'I-air_type', 'B-air_temp', 'I-air_temp', 'B-period',
+                'I-period', 'I-date', 'B-news_topic', 'I-news_topic', 'B-radio_channel',
+                'I-radio_channel', 'B-music_genre', 'I-music_genre', 'B-musician', 'I-musician',
+                'B-song_name', 'I-song_name', 'I-action_type', 'B-event', 'I-event',
+                'B-schedule_property', 'I-schedule_property', 'B-location', 'I-location',
+                'X', '[CLS]', '[SEP]']
 
     def _create_example(self, lines, set_type):
         examples = []

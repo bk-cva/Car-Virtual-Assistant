@@ -1,19 +1,21 @@
 from enum import Enum
 
 
-class Intent(int, Enum):
-    path = 0
-    location = 1
-    music = 2
-    remind = 3
-    control_door = 4
-    control_window = 5
-    control_aircon = 6
-    control_radio = 7
-    schedule = 8
-    request_news = 9
-    phone_call = 1000
-    phone_text = 1001
+class Intent(str, Enum):
+    path = 'path'
+    location = 'location'
+    music = 'music'
+    remind = 'remind'
+    control_door = 'control_door'
+    control_window = 'control_window'
+    control_aircon = 'control_aircon'
+    control_radio = 'control_radio'
+    request_schedule = 'request_schedule'
+    create_schedule = 'create_schedule'
+    cancel_schedule = 'cancel_schedule'
+    request_news = 'request_news'
+    phone_call = 'phone_call'
+    phone_text = 'phone_text'
 
 
 PHONE_CALL_REGEX = [

@@ -18,7 +18,6 @@ message Error {
 }
 
 message PredictResult {
-  required int32 intent_id = 1;
   required string intent = 2;
   repeated Entity entity = 3;
 }
