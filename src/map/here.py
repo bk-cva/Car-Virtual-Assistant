@@ -37,3 +37,20 @@ class HereSDK:
         except HTTPError as e:
             logging.error(e)
             return []
+
+    def call_geocode(self, housenumber: str, street: str, district: str = None,
+                     city: str = 'Hồ Chí Minh', country: str = 'VNM'):
+        try:
+            response = requests.get('https://geocoder.ls.hereapi.com/6.2/geocode.json', params={
+                'apiKey': self.api_key,
+                'housenumber': housenumber,
+                'street': street,
+                'district': district,
+                'city': city,
+                'country': country,
+            })
+            response.raise_for_status()
+            return response.json()['Response']['View']
+        except HTTPError as e:
+            logging.error(e)
+            return []

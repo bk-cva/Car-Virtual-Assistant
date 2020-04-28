@@ -16,4 +16,4 @@ def call_nlu(text: str):
         entities.append(Entity())
         entities[-1].name = entity['name']
         entities[-1].value = entity['value']
-    return Intent(res['intentId']), entities
+    return Intent(res['intent']), entities
