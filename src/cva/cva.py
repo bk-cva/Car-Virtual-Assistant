@@ -16,11 +16,10 @@ class CVA:
                                         latitude=10.7720642,
                                         longitude=106.6586572)
 
-        return self.nlg(act, data)
+        return self.nlg(act, data), data
 
 
 if __name__ == '__main__':
     cva = CVA()
-    utter = 'Đại học Bách Khoa ở đâu?'
-    print('User:', utter)
-    print('CVA:', cva(utter))
+    utter = input('User: ')
+    print('CVA:', cva(utter)[0])
