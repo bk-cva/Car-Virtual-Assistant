@@ -16,12 +16,4 @@ class Intent(str, Enum):
     request_news = 'request_news'
     phone_call = 'phone_call'
     phone_text = 'phone_text'
-
-
-PHONE_CALL_REGEX = [
-    '^gọi',
-]
-PHONE_TEXT_REGEX = [
-    '^nhắn',
-    '^gửi tin',
-]
+    select_item = 'select_item'

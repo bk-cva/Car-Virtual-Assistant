@@ -49,7 +49,7 @@ def analyze():
         predict_result = rest_api_pb2.PredictResult()
         intent = nlu.predict_intent(text)
         predict_result.intent = intent.name
-        predict_result.entity.extend(nlu.predict_entity(text))
+        predict_result.entity.extend(nlu.predict_entities(text))
         results.append(predict_result)
 
     response = rest_api_pb2.Response()

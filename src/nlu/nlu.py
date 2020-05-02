@@ -4,12 +4,10 @@ import pickle
 import os.path
 from typing import List
 
-from .intents.regexer import classify_by_regex
 from .intents.constants import Intent
-from .entities.constants import PHONE_CALL_REGEX, PHONE_TEXT_REGEX
 from .entities.bert_ner import BertNER
 from src.proto.rest_api_pb2 import Entity
-from .common import MODEL_DIR
+from .common import MODEL_DIR, PHONE_CALL_REGEX, PHONE_TEXT_REGEX, SELECT_ITEM_REGEX, NORMALIZE_ENTITY_DICT
 
 
 class NLU:
@@ -20,38 +18,46 @@ class NLU:
 
     def predict_intent(self, text: str) -> Intent:
         """Predict intent of a string"""
-        regex_intent = classify_by_regex(text)
-        if regex_intent:
-            return Intent(regex_intent)
+        for pattern in PHONE_CALL_REGEX:
+            if re.search(pattern, text, re.IGNORECASE):
+                return Intent.phone_call
+        for pattern in PHONE_TEXT_REGEX:
+            if re.search(pattern, text, re.IGNORECASE):
+                return Intent.phone_text
+        for pattern in SELECT_ITEM_REGEX:
+            if re.search(pattern, text, re.IGNORECASE):
+                return Intent.select_item
+
         x = self.nlp(text).vector
         return Intent(self.intent_model.predict([x])[0])
 
-    def predict_entity(self, text: str) -> List[Entity]:
+    def predict_entities(self, text: str) -> List[Entity]:
+        """Extract entities and normalize"""
+        entities = self._extract_entities(text)
+        
+        # Normalize
+        for entity in entities:
+            if entity.name in NORMALIZE_ENTITY_DICT:
+                for normalized_value, possible_values in NORMALIZE_ENTITY_DICT[entity.name].items():
+                    if entity.value in possible_values:
+                        entity.value = str(normalized_value)
+
+        return entities
+
+    
+    def _extract_entities(self, text: str) -> List[Entity]:
         results = []
-        for pattern in PHONE_CALL_REGEX:
+        for pattern in PHONE_CALL_REGEX + PHONE_TEXT_REGEX + SELECT_ITEM_REGEX:
             search_res = re.search(pattern, text, re.IGNORECASE)
             if search_res:
-                entity = Entity()
-                entity.name = 'person_name'
-                entity.value = search_res.group(1)
-
-                results.append(entity)
+                for name, value in search_res.groupdict().items():
+                    entity = Entity()
+                    entity.name = name
+                    entity.value = value
+                    results.append(entity)
                 break
-
-        for pattern in PHONE_TEXT_REGEX:
-            search_res = re.search(pattern, text, re.IGNORECASE)
-            if search_res:
-                entity = Entity()
-                entity.name = 'person_name'
-                entity.value = search_res.group(1)
-
-                entity2 = Entity()
-                entity2.name = 'message'
-                entity2.value = search_res.group(2)
-
-                results.append(entity)
-                results.append(entity2)
-                break
+        if len(results) > 0:
+            return results
 
         bert_predictions = self.ner_model.predict(text)
         bert_results = []
@@ -64,5 +70,4 @@ class NLU:
                     bert_results.append(entity)
                 elif bert_predict[1].startswith('I-') and i > 0 and re.match(r'^[BI]-', bert_predictions[i - 1][1]):
                     bert_results[-1].value += ' ' + bert_predict[0]
-
-        return results + bert_results
+        return bert_results
