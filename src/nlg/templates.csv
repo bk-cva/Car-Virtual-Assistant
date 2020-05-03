@@ -1,3 +1,5 @@
-res_loc|{address}
-no_loc|Không tìm thấy địa điểm.
+respond_location|{address}
+show_location|Vị trí {location} đang được hiển thị.
+select_location|Tôi đã tìm được {num_locs} địa điểm liên quan.
+no_location|Không tìm thấy địa điểm.
 default|Đã xảy ra lỗi.
