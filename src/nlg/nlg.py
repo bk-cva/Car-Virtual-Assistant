@@ -1,7 +1,11 @@
 import re
 import csv
+import logging
 import os.path
 from typing import Dict
+
+
+logger = logging.getLogger(__name__)
 
 
 class NLG:
@@ -19,6 +23,7 @@ class NLG:
         if action in self.templates:
             response = self.templates[action].format(**substitutes)
             return self._clean(response)
+        logger.warning('No template found for \'{}\', use default.'.format(action))
         return self.templates['default']
 
     def _clean(self, text):

@@ -6,17 +6,20 @@ from ..nlu.intents.constants import Intent
 from src.proto.rest_api_pb2 import Entity
 
 
+logger = logging.getLogger(__name__)
+
+
 def call_nlu(text: str):
     nlu_url = ConfigManager().get('NLU_URL')
 
     try:
-        res = requests.post(nlu_url, json={
-            'texts': [text]
-        })
+        payload = {'texts': [text]}
+        res = requests.post(nlu_url, json=payload)
         res.raise_for_status()
         res = res.json()['results'][0]
     except Exception as e:
-        logging.error(str(e))
+        logger.exception('Exception occured when sending message: {}'.format(text))
+        logger.exception(str(e))
         raise NluException()
 
     entities = []

@@ -38,6 +38,7 @@ def health_check_route():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
+    # TODO: Check empty string
     try:
         proto_request = __extract_request(flask_request, rest_api_pb2.Request())
     except Exception as ex:
