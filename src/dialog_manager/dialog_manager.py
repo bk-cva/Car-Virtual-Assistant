@@ -1,3 +1,4 @@
+import logging
 from typing import List, Dict, Tuple
 
 from .dialog_state_tracker import FeaturizedTracker
@@ -5,6 +6,10 @@ from ..nlu.intents.constants import Intent
 from ..map.here import HereSDK
 from .response_selector import ResponseSelector
 from .state import State
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class DialogManager:
@@ -20,68 +25,96 @@ class DialogManager:
 
     def handle(self, intent: Intent, entities: List, **kwargs) -> Tuple[str, any]:
         entities_list = [[entity.name, entity.value] for entity in entities] # Reformat entities
-        latitude, longitude = kwargs.get('latitude'), kwargs.get('longitude')
 
         if self.fsm == State.START:
             if intent == Intent.location:
-                self._set_state(State.FIND_LOCATION)
+                self.location_tracker.reset_state()
                 self.location_tracker.update_state(entities_list)
                 current_state = self.location_tracker.get_state()
-                if 'place' in current_state:
-                    query = current_state['place']
-                    items = self.here_api.call_autosuggest(
-                        (latitude, longitude), query)
-                    if len(items) > 0:
-                        item = self.selector.select(items)
-                        return 'respond_location', {'address': item.vicinity,
-                                                    'latitude': item.position[0],
-                                                    'longitude': item.position[1]}
-                    return 'no_location', None
+                if 'place' in current_state or 'activity' in current_state:
+                    self._set_state(State.FIND_LOCATION)
                 elif 'street' in current_state:
-                    query = {'street': current_state.get('street')}
-                    if 'address' in current_state:
-                        query['housenumber'] = current_state.get('address')
-                    if 'district' in current_state:
-                        query['district'] = current_state.get('district')
-                    items = self.here_api.call_geocode(**query)
-                    if len(items) > 0:
-                        if len(items[0]['Result']) > 0:
-                            result = items[0]['Result'][0]
-                            return 'respond_location', {'address': result['Location']['Address']['Label'],
-                                                        'latitude': result['Location']['DisplayPosition']['Latitude'],
-                                                        'longitude': result['Location']['DisplayPosition']['Longitude']}
-                    return 'no_loc', None
-                elif 'activity' in current_state:
-                    query = current_state['activity']
-                    items = self.here_api.call_autosuggest(
-                        (latitude, longitude), query)
-                    if len(items) > 0:
-                        if len(items) > 1:
-                            self.cached['locations'] = items
-                            return 'select_location', {'locations': items, 'num_locs': len(items)}
-                        else:
-                            return 'respond_location', {'address': item[0].vicinity}
-                    return 'no_location', None
+                    self._set_state(State.FIND_ADDRESS)
                 else:
-                    return 'show_location', {'location': 'hiện tại',
-                                            'latitude': latitude,
-                                            'longitude': longitude}
+                    self._set_state(State.FIND_CURRENT)
+            
+            if intent == Intent.create_schedule:
+                pass
 
         elif self.fsm == State.FIND_LOCATION:
-            if intent == Intent.select_item:
-                self._set_state(State.SELECT_LOCATION)
-                item = self.cached['locations'][int(
-                    list(filter(lambda x: x.name == 'number', entities))[0].value) - 1]
-                return 'respond_location', {'address': item.vicinity,
-                                            'latitude': item.position[0],
-                                            'longitude': item.position[1]}
+            items = self.execute(intent, entities, **kwargs)
+            if len(items) > 0:
+                self.cached['locations'] = items
+                if len(items) > 1:
+                    self._set_state(State.SELECT_LOCATION)
+                else:
+                    self._set_state(State.RETURN_LOCATION)
+            else:
+                self._set_state(State.NO_LOCATION)
+        
+        elif self.fsm == State.FIND_ADDRESS:
+            items = self.execute(intent, entities, **kwargs)
+            if len(items) > 0:
+                self.cached['locations'] = items
+                self._set_state(State.RETURN_LOCATION)
+            else:
+                self._set_state(State.NO_LOCATION)
+        
+        elif self.fsm == State.FIND_CURRENT:
+            self._set_state(State.START)
+            latitude, longitude = kwargs.get(
+                'latitude'), kwargs.get('longitude')
+            return 'show_current_location', {'latitude': latitude,
+                                             'longitude': longitude}
+
+        elif self.fsm == State.NO_LOCATION:
+            self._set_state(State.START)
+            return 'no_location', {}
+
         elif self.fsm == State.SELECT_LOCATION:
-            if intent == Intent.path:
-                pass
+            if intent == Intent.select_item:
+                self.cached['selected_location'] = int(
+                    list(filter(lambda x: x.name == 'number', entities))[0].value) - 1
+                self._set_state(State.RETURN_LOCATION)
+            else:
+                return 'select_location', {'locations': self.cached['locations'],
+                                           'num_locs': len(self.cached['locations'])}
+
+        elif self.fsm == State.RETURN_LOCATION:
+            self._set_state(State.START)
+            index = self.cached.get('selected_location', 0)
+            item = self.cached['locations'][index]
+            return 'respond_location', {'address': item.vicinity,
+                                        'latitude': item.position[0],
+                                        'longitude': item.position[1]}
         else:
             raise Exception('Unexpected state {}'.format(self.fsm))
 
-        return '', None
+        return None
+
+    def execute(self, intent: Intent, entities: List, **kwargs) -> Tuple[str, any]:
+        latitude, longitude = kwargs.get('latitude'), kwargs.get('longitude')
+
+        if self.fsm == State.FIND_LOCATION:
+            current_state = self.location_tracker.get_state()
+            query = current_state.get('place', current_state.get('activity'))
+            if 'street' in current_state:
+                query += ' đường ' + current_state['street']
+            if 'district' in current_state:
+                query += ' quận ' + current_state['district']
+            items = self.here_api.call_autosuggest((latitude, longitude), query)
+            return items
+
+        elif self.fsm == State.FIND_ADDRESS:
+            current_state = self.location_tracker.get_state()
+            query = {'street': current_state.get('street')}
+            if 'address' in current_state:
+                query['housenumber'] = current_state.get('address')
+            if 'district' in current_state:
+                query['district'] = current_state.get('district')
+            items = self.here_api.call_geocode(**query)
+            return items
 
     def _set_state(self, state: State):
+        logger.debug('Change state: {} -> {}'.format(self.fsm.name, state.name))
         self.fsm = state

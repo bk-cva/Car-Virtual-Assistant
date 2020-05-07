@@ -25,10 +25,13 @@ class CVA:
         except NluException:
             return self.nlg(None, None), None
 
-        act, data = self.manager.handle(intent, entities,
-                                        latitude=10.7720642,
-                                        longitude=106.6586572)
+        response = None
+        while response is None:
+            response = self.manager.handle(intent, entities,
+                                           latitude=10.7720642,
+                                           longitude=106.6586572)
 
+        act, data = response
         return self.nlg(act, data), data
 
 
