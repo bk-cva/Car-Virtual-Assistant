@@ -28,18 +28,21 @@ class DialogManager:
 
         if self.fsm == State.START:
             if intent == Intent.location:
-                self.location_tracker.reset_state()
-                self.location_tracker.update_state(entities_list)
-                current_state = self.location_tracker.get_state()
-                if 'place' in current_state or 'activity' in current_state:
-                    self._set_state(State.FIND_LOCATION)
-                elif 'street' in current_state:
-                    self._set_state(State.FIND_ADDRESS)
-                else:
-                    self._set_state(State.FIND_CURRENT)
+                self._set_state(State.LOCATION)
             
             if intent == Intent.create_schedule:
                 pass
+        
+        elif self.fsm == State.LOCATION:
+            self.location_tracker.reset_state()
+            self.location_tracker.update_state(entities_list)
+            current_state = self.location_tracker.get_state()
+            if 'place' in current_state or 'activity' in current_state:
+                self._set_state(State.FIND_LOCATION)
+            elif 'street' in current_state:
+                self._set_state(State.FIND_ADDRESS)
+            else:
+                self._set_state(State.FIND_CURRENT)
 
         elif self.fsm == State.FIND_LOCATION:
             items = self.execute(intent, entities, **kwargs)
@@ -61,11 +64,17 @@ class DialogManager:
                 self._set_state(State.NO_LOCATION)
         
         elif self.fsm == State.FIND_CURRENT:
-            self._set_state(State.START)
             latitude, longitude = kwargs.get(
                 'latitude'), kwargs.get('longitude')
-            return 'show_current_location', {'latitude': latitude,
-                                             'longitude': longitude}
+            items = self.execute(intent, entities, **kwargs)
+            self._set_state(State.START)
+            if len(items) > 0:
+                return 'show_current_location', {'address': items[0].vicinity,
+                                                 'latitude': latitude,
+                                                 'longitude': longitude}
+            else:
+                return 'show_current_location_alt', {'latitude': latitude,
+                                                     'longitude': longitude}
 
         elif self.fsm == State.NO_LOCATION:
             self._set_state(State.START)
@@ -93,8 +102,6 @@ class DialogManager:
         return None
 
     def execute(self, intent: Intent, entities: List, **kwargs) -> Tuple[str, any]:
-        latitude, longitude = kwargs.get('latitude'), kwargs.get('longitude')
-
         if self.fsm == State.FIND_LOCATION:
             current_state = self.location_tracker.get_state()
             query = current_state.get('place', current_state.get('activity'))
@@ -102,6 +109,8 @@ class DialogManager:
                 query += ' đường ' + current_state['street']
             if 'district' in current_state:
                 query += ' quận ' + current_state['district']
+            latitude, longitude = kwargs.get(
+                'latitude'), kwargs.get('longitude')
             items = self.here_api.call_autosuggest((latitude, longitude), query)
             return items
 
@@ -113,6 +122,12 @@ class DialogManager:
             if 'district' in current_state:
                 query['district'] = current_state.get('district')
             items = self.here_api.call_geocode(**query)
+            return items
+        
+        elif self.fsm == State.FIND_CURRENT:
+            latitude, longitude = kwargs.get(
+                'latitude'), kwargs.get('longitude')
+            items = self.here_api.call_reverse_geocode(latitude, longitude)
             return items
 
     def _set_state(self, state: State):

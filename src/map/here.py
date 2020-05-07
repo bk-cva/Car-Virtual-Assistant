@@ -69,6 +69,31 @@ class HereSDK:
         except HTTPError as e:
             logger.exception(str(e))
             return []
+    
+    def call_reverse_geocode(self, latitude: float, longitude: float):
+        try:
+            response = requests.get('https://reverse.geocoder.ls.hereapi.com/6.2/reversegeocode.json', params={
+                'apiKey': self.api_key,
+                'prox': '{},{},500'.format(latitude, longitude),
+                'mode': 'retrieveAll',
+                'maxresults': 1,
+            })
+            response.raise_for_status()
+            view = response.json()['Response']['View']
+            if len(view) > 0:
+                results = []
+                for res in view[0]['Result']:
+                    results.append(SuggestionResult(
+                        title=res['Location']['Address']['Label'],
+                        vicinity=res['Location']['Address']['Label'],
+                        position=[res['Location']['DisplayPosition']['Latitude'],
+                                  res['Location']['DisplayPosition']['Longitude']]))
+                return results
+            else:
+                return []
+        except HTTPError as e:
+            logger.exception(str(e))
+            return []
 
     def call_route(self, waypoint0: Tuple[float, float], waypoint1: Tuple[float, float]):
         try:

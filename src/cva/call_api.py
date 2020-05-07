@@ -18,7 +18,7 @@ def call_nlu(text: str):
         res.raise_for_status()
         res = res.json()['results'][0]
     except Exception as e:
-        logger.exception('Exception occured when sending message: {}'.format(text))
+        logger.exception('Exception occured when sending message: "{}"'.format(text))
         logger.exception(str(e))
         raise NluException()
 
