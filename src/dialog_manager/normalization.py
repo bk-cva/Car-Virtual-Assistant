@@ -13,6 +13,9 @@ NORMALIZE_ENTITY_DICT = {
         5: ['5', 'năm'],
         6: ['6', 'sáu'],
         7: ['7', 'bảy'],
+        8: ['8', 'tám'],
+        9: ['9', 'chín'],
+        10: ['10', 'mười'],
     },
     'date': {
         0: ['nay', 'hôm nay', 'ngày hôm nay'],
@@ -44,6 +47,10 @@ def normalize(entity: Entity):
 
     if entity.name == 'date':
         date_value = entity.value
+
+        if isinstance(date_value, int):
+            return date.today() + timedelta(date_value)
+
         match_weekday = re.match(r'(thứ (?P<d>\w+))|(?P<c>chủ nhật)', date_value)
         match_date = re.match(r'ngày (?P<d>\d+)', date_value)
         if match_weekday:
@@ -65,8 +72,6 @@ def normalize(entity: Entity):
             if days_ahead < 0:
                 days_ahead += 7
             return today + timedelta(days_ahead)
-        elif isinstance(date_value, int):
-            return date.today() + timedelta(date_value)
         elif match_date:
             date_value = int(match_date.group('d'))
             today = date.today()
@@ -74,5 +79,5 @@ def normalize(entity: Entity):
             if days_ahead < 0:
                 # TODO: handle next month
                 raise NormalizationError()
-            return today + timedelta(days_ahead)
+            return date(today.year, today.month, date_value)
 
