@@ -23,6 +23,9 @@ class DialogManager:
         self.path_tracker = FeaturizedTracker(['place', 'info_type'])
         self.selector = selector
 
+    def reset_state(self):
+        self._set_state(State.START)
+
     def handle(self, intent: Intent, entities: List, **kwargs) -> Tuple[str, any]:
         entities_list = [[entity.name, entity.value] for entity in entities] # Reformat entities
 
@@ -30,8 +33,8 @@ class DialogManager:
             if intent == Intent.location:
                 self._set_state(State.LOCATION)
             
-            if intent == Intent.create_schedule:
-                pass
+            else:
+                return 'intent_not_found', {}
         
         elif self.fsm == State.LOCATION:
             self.location_tracker.reset_state()
@@ -82,7 +85,7 @@ class DialogManager:
 
         elif self.fsm == State.SELECT_LOCATION:
             if intent == Intent.select_item:
-                self.cached['selected_location'] = list(filter(lambda x: x.name == 'number', entities))[0].value
+                self.cached['selected_location'] = next(filter(lambda x: x.name == 'number', entities)).value
                 self._set_state(State.RETURN_LOCATION)
             else:
                 return 'select_location', {'locations': self.cached['locations'],

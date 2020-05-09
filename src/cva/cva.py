@@ -40,6 +40,29 @@ class CVA:
 
 if __name__ == '__main__':
     cva = CVA()
-    while True:
-        utter = input('User: ')
-        print('CVA:', cva(utter)[0])
+    user_snapshot = []
+    with open('snapshots/user_snapshot.txt', mode='r', encoding='utf-8') as file:
+        user_conversation = []
+        while True:
+            line = file.readline()
+            if not line:
+                if len(user_conversation) > 0:
+                    user_snapshot.append(user_conversation)
+                break
+            if len(line.strip()) > 0:
+                user_conversation.append(line)
+            else:
+                user_snapshot.append(user_conversation)
+                user_conversation = []
+
+    with open('snapshots/cva_snapshot.txt', mode='w', encoding='utf-8') as file:
+        while True:
+            if len(user_snapshot) == 0:
+                break
+            user_conversation = user_snapshot.pop(0)
+            for utter in user_conversation:
+                cva_response = cva(utter)[0]
+                file.write(cva_response + '\n')
+            file.write('\n')
+            cva.manager.reset_state()
+
