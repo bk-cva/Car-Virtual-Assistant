@@ -23,13 +23,3 @@ SELECT_ITEM_REGEX = [
     r'cái số (?P<number>\w+)$',
     r'cái (?P<number>đầu tiên)',
 ]
-
-NORMALIZE_ENTITY_DICT = {
-    'number': {
-        1: ['nhất', 'đầu tiên', 'một'],
-        2: ['hai', 'nhì'],
-        3: ['ba'],
-        4: ['bốn', 'tư'],
-        5: ['năm'],
-    }
-}

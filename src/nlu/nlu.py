@@ -32,20 +32,7 @@ class NLU:
         return Intent(self.intent_model.predict([x])[0])
 
     def predict_entities(self, text: str) -> List[Entity]:
-        """Extract entities and normalize"""
-        entities = self._extract_entities(text)
-        
-        # Normalize
-        for entity in entities:
-            if entity.name in NORMALIZE_ENTITY_DICT:
-                for normalized_value, possible_values in NORMALIZE_ENTITY_DICT[entity.name].items():
-                    if entity.value in possible_values:
-                        entity.value = str(normalized_value)
-
-        return entities
-
-    
-    def _extract_entities(self, text: str) -> List[Entity]:
+        """Extract entities"""
         results = []
         for pattern in PHONE_CALL_REGEX + PHONE_TEXT_REGEX + SELECT_ITEM_REGEX:
             search_res = re.search(pattern, text, re.IGNORECASE)
