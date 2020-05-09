@@ -19,56 +19,49 @@ class TestNormalizeDate(unittest.TestCase):
         entity.name = 'date'
         entity.value = 'thứ 5'
 
-        result = normalize(entity)
-        self.assertEqual(result, date(2020, 1, 2))
+        self.assertEqual(normalize(entity).value, date(2020, 1, 2))
 
     def test_date_2(self):
         entity = Entity
         entity.name = 'date'
         entity.value = 'chủ nhật'
 
-        result = normalize(entity)
-        self.assertEqual(result, date(2020, 1, 5))
+        self.assertEqual(normalize(entity).value, date(2020, 1, 5))
 
     def test_date_3(self):
         entity = Entity
         entity.name = 'date'
         entity.value = 'thứ 2'
 
-        result = normalize(entity)
-        self.assertEqual(result, date(2020, 1, 6))
+        self.assertEqual(normalize(entity).value, date(2020, 1, 6))
 
     def test_date_4(self):
         entity = Entity
         entity.name = 'date'
         entity.value = 'hôm nay'
 
-        result = normalize(entity)
-        self.assertEqual(result, date(2020, 1, 1))
+        self.assertEqual(normalize(entity).value, date(2020, 1, 1))
 
     def test_date_5(self):
         entity = Entity
         entity.name = 'date'
         entity.value = 'mai'
 
-        result = normalize(entity)
-        self.assertEqual(result, date(2020, 1, 2))
+        self.assertEqual(normalize(entity).value, date(2020, 1, 2))
 
     def test_date_6(self):
         entity = Entity
         entity.name = 'date'
         entity.value = 'mốt'
 
-        result = normalize(entity)
-        self.assertEqual(result, date(2020, 1, 3))
+        self.assertEqual(normalize(entity).value, date(2020, 1, 3))
 
     def test_date_7(self):
         entity = Entity
         entity.name = 'date'
         entity.value = 'ngày 10'
 
-        result = normalize(entity)
-        self.assertEqual(result, date(2020, 1, 10))
+        self.assertEqual(normalize(entity).value, date(2020, 1, 10))
     
     def test_date_error(self):
         entity = Entity
@@ -97,3 +90,19 @@ class TestNormalizeDate(unittest.TestCase):
 
     def tearDown(self):
         self.mock_date_patcher.stop()
+
+
+class TestNormalizeNumber(unittest.TestCase):
+    def test_result(self):
+        entity = Entity
+        entity.name = 'number'
+        entity.value = 'đầu tiên'
+
+        self.assertEqual(normalize(entity).value, 1)
+
+    def test_result_2(self):
+        entity = Entity
+        entity.name = 'number'
+        entity.value = '2'
+
+        self.assertEqual(normalize(entity).value, 2)

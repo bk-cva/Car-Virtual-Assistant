@@ -47,37 +47,38 @@ def normalize(entity: Entity):
 
     if entity.name == 'date':
         date_value = entity.value
-
         if isinstance(date_value, int):
-            return date.today() + timedelta(date_value)
-
-        match_weekday = re.match(r'(thứ (?P<d>\w+))|(?P<c>chủ nhật)', date_value)
-        match_date = re.match(r'ngày (?P<d>\d+)', date_value)
-        if match_weekday:
-            if match_weekday.group('d'):
-                date_value = match_weekday.group('d')
-            else:
-                date_value = match_weekday.group('c')
-            if date_value.isdecimal():
-                date_value = int(date_value)
-                if date_value < 2 or date_value > 7:
-                    raise NormalizationError('Invalid date value {}'.format(date_value))
-            else:
-                if date_value in weekday:
-                    date_value = weekday[date_value]
+            entity.value = date.today() + timedelta(date_value)
+        else:
+            match_weekday = re.match(r'(thứ (?P<d>\w+))|(?P<c>chủ nhật)', date_value)
+            match_date = re.match(r'ngày (?P<d>\d+)', date_value)
+            if match_weekday:
+                if match_weekday.group('d'):
+                    date_value = match_weekday.group('d')
                 else:
-                    raise NormalizationError('Invalid date value {}'.format(date_value))
-            today = date.today()
-            days_ahead = date_value - 1 - today.isoweekday()
-            if days_ahead < 0:
-                days_ahead += 7
-            return today + timedelta(days_ahead)
-        elif match_date:
-            date_value = int(match_date.group('d'))
-            today = date.today()
-            days_ahead = date_value - today.day
-            if days_ahead < 0:
-                # TODO: handle next month
-                raise NormalizationError()
-            return date(today.year, today.month, date_value)
+                    date_value = match_weekday.group('c')
+                if date_value.isdecimal():
+                    date_value = int(date_value)
+                    if date_value < 2 or date_value > 7:
+                        raise NormalizationError('Invalid date value {}'.format(date_value))
+                else:
+                    if date_value in weekday:
+                        date_value = weekday[date_value]
+                    else:
+                        raise NormalizationError('Invalid date value {}'.format(date_value))
+                today = date.today()
+                days_ahead = date_value - 1 - today.isoweekday()
+                if days_ahead < 0:
+                    days_ahead += 7
+                entity.value = today + timedelta(days_ahead)
+            elif match_date:
+                date_value = int(match_date.group('d'))
+                today = date.today()
+                days_ahead = date_value - today.day
+                if days_ahead < 0:
+                    # TODO: handle next month
+                    raise NormalizationError()
+                entity.value = date(today.year, today.month, date_value)
+
+    return entity
 
