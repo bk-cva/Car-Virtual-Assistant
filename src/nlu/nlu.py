@@ -7,7 +7,7 @@ from typing import List
 from .intents.constants import Intent
 from .entities.bert_ner import BertNER
 from src.proto.rest_api_pb2 import Entity
-from .common import MODEL_DIR, PHONE_CALL_REGEX, PHONE_TEXT_REGEX, SELECT_ITEM_REGEX, NORMALIZE_ENTITY_DICT
+from .common import MODEL_DIR, PHONE_CALL_REGEX, PHONE_TEXT_REGEX, SELECT_ITEM_REGEX
 
 
 class NLU:
