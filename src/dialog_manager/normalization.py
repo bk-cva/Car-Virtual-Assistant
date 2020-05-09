@@ -39,16 +39,23 @@ class NormalizationError(Exception):
     pass
 
 
-def normalize(entity: Entity):
-    if entity.name in NORMALIZE_ENTITY_DICT:
-        for normalized_value, possible_values in NORMALIZE_ENTITY_DICT[entity.name].items():
-            if entity.value in possible_values:
-                entity.value = normalized_value
+class NormalEntity:
+    def __init__(self, name=None, value=None):
+        self.name = name
+        self.value = value
 
-    if entity.name == 'date':
-        date_value = entity.value
+
+def normalize(entity: Entity) -> NormalEntity:
+    result = NormalEntity(entity.name, entity.value)
+    if result.name in NORMALIZE_ENTITY_DICT:
+        for normalized_value, possible_values in NORMALIZE_ENTITY_DICT[result.name].items():
+            if result.value in possible_values:
+                result.value = normalized_value
+
+    if result.name == 'date':
+        date_value = result.value
         if isinstance(date_value, int):
-            entity.value = date.today() + timedelta(date_value)
+            result.value = date.today() + timedelta(date_value)
         else:
             match_weekday = re.match(r'(thứ (?P<d>\w+))|(?P<c>chủ nhật)', date_value)
             match_date = re.match(r'ngày (?P<d>\d+)', date_value)
@@ -70,7 +77,7 @@ def normalize(entity: Entity):
                 days_ahead = date_value - 1 - today.isoweekday()
                 if days_ahead < 0:
                     days_ahead += 7
-                entity.value = today + timedelta(days_ahead)
+                result.value = today + timedelta(days_ahead)
             elif match_date:
                 date_value = int(match_date.group('d'))
                 today = date.today()
@@ -78,7 +85,7 @@ def normalize(entity: Entity):
                 if days_ahead < 0:
                     # TODO: handle next month
                     raise NormalizationError()
-                entity.value = date(today.year, today.month, date_value)
+                result.value = date(today.year, today.month, date_value)
 
-    return entity
+    return result
 
