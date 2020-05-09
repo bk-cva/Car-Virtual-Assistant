@@ -98,11 +98,11 @@ class TestNormalizeNumber(unittest.TestCase):
         entity.name = 'number'
         entity.value = 'đầu tiên'
 
-        self.assertEqual(normalize(entity).value, 1)
+        self.assertEqual(normalize(entity).value, 0)
 
     def test_result_2(self):
         entity = Entity
         entity.name = 'number'
         entity.value = '2'
 
-        self.assertEqual(normalize(entity).value, 2)
+        self.assertEqual(normalize(entity).value, 1)

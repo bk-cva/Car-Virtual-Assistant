@@ -82,8 +82,7 @@ class DialogManager:
 
         elif self.fsm == State.SELECT_LOCATION:
             if intent == Intent.select_item:
-                self.cached['selected_location'] = int(
-                    list(filter(lambda x: x.name == 'number', entities))[0].value) - 1
+                self.cached['selected_location'] = list(filter(lambda x: x.name == 'number', entities))[0].value
                 self._set_state(State.RETURN_LOCATION)
             else:
                 return 'select_location', {'locations': self.cached['locations'],
