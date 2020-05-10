@@ -7,7 +7,6 @@ from google.protobuf import json_format
 
 from src.nlu import NLU
 from src.proto import rest_api_pb2
-from src.map import HereSDK
 
 
 app = Flask(__name__)
@@ -15,7 +14,6 @@ gunicorn_logger = logging.getLogger('gunicorn.error')
 app.logger.handlers = gunicorn_logger.handlers
 app.logger.setLevel(gunicorn_logger.level)
 CORS(app)
-here_app = HereSDK()
 nlu = NLU()
 
 
@@ -56,27 +54,6 @@ def analyze():
     response = rest_api_pb2.Response()
     response.results.extend(results)
     return make_response(json_format.MessageToJson(response), 200)
-
-
-@app.route('/map/suggest', methods=['POST'])
-def suggest():
-    try:
-        proto_request = __extract_request(flask_request, rest_api_pb2.SuggestRequest())
-        if not re.match(r'[\d.]+,[\d.]+', proto_request.at):
-            raise ValueError('`at` must be 2 floats separated by `,`')
-
-        at = list(map(float, proto_request.at.split(',')))
-        api_results = here_app.call_autosuggest(at, proto_request.q)
-        results = []
-        for api_res in api_results:
-            res = {'title': api_res.title, 'vicinity': api_res.vicinity, 'position': api_res.position,
-                   'distance': api_res.distance, 'resultType': api_res.resultType}
-            results.append(res)
-        return make_response({
-            'results': results,
-        }, 200)
-    except Exception as ex:
-        return make_response(__make_json_response_error(str(ex)), 500)
 
 
 def __make_json_response_error(message):
