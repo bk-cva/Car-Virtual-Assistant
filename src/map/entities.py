@@ -1,14 +1,16 @@
 from typing import Tuple
 
 
-class SuggestionResult:
+class SearchResult:
     def __init__(self,
                  title: str,
-                 vicinity: str = None,
-                 position: Tuple[float, float] = None,
+                 address: str = None,
+                 latitude: float = None,
+                 longitude: float = None,
                  distance: float = None,
                  **kwargs):
         self.title = title
-        self.vicinity = vicinity
-        self.position = position
+        self.address = address
+        self.latitude = latitude
+        self.longitude = longitude
         self.distance = distance

@@ -72,7 +72,7 @@ class DialogManager:
             items = self.execute(intent, entities, **kwargs)
             self._set_state(State.START)
             if len(items) > 0:
-                return 'show_current_location', {'address': items[0].vicinity,
+                return 'show_current_location', {'address': items[0].address,
                                                  'latitude': latitude,
                                                  'longitude': longitude}
             else:
@@ -95,9 +95,9 @@ class DialogManager:
             self._set_state(State.START)
             index = self.cached.get('selected_location', 0)
             item = self.cached['locations'][index]
-            return 'respond_location', {'address': item.vicinity,
-                                        'latitude': item.position[0],
-                                        'longitude': item.position[1]}
+            return 'respond_location', {'address': item.address,
+                                        'latitude': item.latitude,
+                                        'longitude': item.longitude}
         else:
             raise Exception('Unexpected state {}'.format(self.fsm))
 
@@ -113,7 +113,7 @@ class DialogManager:
                 query += ' quận ' + current_state['district']
             latitude, longitude = kwargs.get(
                 'latitude'), kwargs.get('longitude')
-            items = self.here_api.call_autosuggest((latitude, longitude), query)
+            items = self.here_api.search((latitude, longitude), query)
             return items
 
         elif self.fsm == State.FIND_ADDRESS:

@@ -4,7 +4,7 @@ from requests.exceptions import HTTPError
 from typing import Tuple, List
 
 from ..common.config_manager import ConfigManager
-from .entities import SuggestionResult
+from .entities import SearchResult
 
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ class HereSDK:
             api_key = ConfigManager().get('HERE_API_KEY')
         self.api_key = api_key
 
-    def call_autosuggest(self, at: Tuple[float, float], q: str) -> List[SuggestionResult]:
+    def search(self, at: Tuple[float, float], q: str) -> List[SearchResult]:
         """Get suggestions by query string
 
         Args:
@@ -24,19 +24,25 @@ class HereSDK:
             q: query string
 
         Returns:
-            list of SuggestionResults
+            list of SearchResults
         """
         try:
-            response = requests.get('https://places.sit.ls.hereapi.com/places/v1/discover/search', params={
+            response = requests.get('https://discover.search.hereapi.com/v1/discover', params={
                 'apiKey': self.api_key,
-                'tf': 'plain',
                 'at': ','.join(map(str, at)),
+                'limit': 10,
                 'q': q,
             })
             response.raise_for_status()
             results = []
-            for res in response.json()['results']['items']:
-                results.append(SuggestionResult(**res))
+            for res in response.json()['items']:
+                results.append(SearchResult(
+                    title=res['title'],
+                    address=res['address']['label'],
+                    latitude=res['position']['lat'],
+                    longitude=res['position']['lng'],
+                    distance=res['distance']
+                ))
             return results
         except HTTPError as e:
             logger.exception(str(e))
@@ -58,11 +64,11 @@ class HereSDK:
             if len(view) > 0:
                 results = []
                 for res in view[0]['Result']:
-                    results.append(SuggestionResult(
+                    results.append(SearchResult(
                         title=res['Location']['Address']['Label'],
-                        vicinity=res['Location']['Address']['Label'],
-                        position=[res['Location']['DisplayPosition']['Latitude'],
-                                  res['Location']['DisplayPosition']['Longitude']]))
+                        address=res['Location']['Address']['Label'],
+                        latitude=res['Location']['DisplayPosition']['Latitude'],
+                        longitude=res['Location']['DisplayPosition']['Longitude']))
                 return results
             else:
                 return []
@@ -83,11 +89,11 @@ class HereSDK:
             if len(view) > 0:
                 results = []
                 for res in view[0]['Result']:
-                    results.append(SuggestionResult(
+                    results.append(SearchResult(
                         title=res['Location']['Address']['Label'],
-                        vicinity=res['Location']['Address']['Label'],
-                        position=[res['Location']['DisplayPosition']['Latitude'],
-                                  res['Location']['DisplayPosition']['Longitude']]))
+                        address=res['Location']['Address']['Label'],
+                        latitude=res['Location']['DisplayPosition']['Latitude'],
+                        longitude=res['Location']['DisplayPosition']['Longitude']))
                 return results
             else:
                 return []
