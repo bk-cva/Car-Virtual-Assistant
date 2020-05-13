@@ -2,10 +2,11 @@ import logging
 from typing import List, Dict, Tuple
 
 from .dialog_state_tracker import FeaturizedTracker
-from ..nlu.intents.constants import Intent
-from ..map.here import HereSDK
 from .response_selector import ResponseSelector
 from .state import State
+from src.nlu.intents.constants import Intent
+from src.map.here import HereSDK
+from src.utils import match_string
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ class DialogManager:
         self.cached = {}
         self.location_tracker = FeaturizedTracker(['place', 'place_property', 'info_type',
                                                    'address', 'street', 'ward', 'district',
-                                                   'activity'])
+                                                   'activity', 'number'])
         self.path_tracker = FeaturizedTracker(['place', 'info_type'])
         self.selector = selector
 
@@ -51,10 +52,7 @@ class DialogManager:
             items = self.execute(intent, entities, **kwargs)
             if len(items) > 0:
                 self.cached['locations'] = items
-                if len(items) > 1:
-                    self._set_state(State.SELECT_LOCATION)
-                else:
-                    self._set_state(State.RETURN_LOCATION)
+                self._set_state(State.AUTO_SELECT)
             else:
                 self._set_state(State.NO_LOCATION)
         
@@ -82,10 +80,29 @@ class DialogManager:
         elif self.fsm == State.NO_LOCATION:
             self._set_state(State.START)
             return 'no_location', {}
+        
+        elif self.fsm == State.AUTO_SELECT:
+            items = self.cached['locations']
+            if len(items) == 1:
+                self._set_state(State.RETURN_LOCATION)
+            else:
+                query = self.cached['location_query']
+                matched_items = []
+                for item in items:
+                    if match_string(query, item.title):
+                        matched_items.append(item)
+                if len(matched_items) == 0:
+                    self._set_state(State.SELECT_LOCATION)
+                else:
+                    self.cached['locations'] = matched_items
+                    if len(matched_items) == 1:
+                        self._set_state(State.RETURN_LOCATION)
+                    else:
+                        self._set_state(State.SELECT_LOCATION)
 
         elif self.fsm == State.SELECT_LOCATION:
             if intent == Intent.select_item:
-                self.cached['selected_location'] = next(filter(lambda x: x.name == 'number', entities)).value
+                self.location_tracker.update_state(entities_list)
                 self._set_state(State.RETURN_LOCATION)
             else:
                 return 'select_location', {'locations': self.cached['locations'],
@@ -93,7 +110,7 @@ class DialogManager:
 
         elif self.fsm == State.RETURN_LOCATION:
             self._set_state(State.START)
-            index = self.cached.get('selected_location', 0)
+            index = self.location_tracker.get_state().get('number', 0)
             item = self.cached['locations'][index]
             return 'respond_location', {'address': item.address,
                                         'latitude': item.latitude,
@@ -113,6 +130,7 @@ class DialogManager:
                 query += ' quận ' + current_state['district']
             latitude, longitude = kwargs.get(
                 'latitude'), kwargs.get('longitude')
+            self.cached['location_query'] = query
             items = self.here_api.search((latitude, longitude), query)
             return items
 
