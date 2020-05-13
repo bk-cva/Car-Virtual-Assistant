@@ -1,6 +1,7 @@
 import numpy as np
 import logging
 import requests
+from datetime import datetime
 from fuzzywuzzy import fuzz
 
 from ..common.config_manager import ConfigManager
@@ -45,3 +46,8 @@ def match_string(target: str, value: str) -> bool:
         return True
     return False
 
+
+def datetime_range_to_string(d1: datetime, d2: datetime) -> str:
+    if d1.time() == datetime.min.time() and d2.time() == datetime.min.time():
+        return d1.strftime('ngày %d tháng %m')
+    return 'Thời gian đó'

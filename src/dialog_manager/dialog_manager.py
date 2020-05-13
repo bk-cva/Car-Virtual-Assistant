@@ -1,12 +1,15 @@
 import logging
+from datetime import datetime, timedelta
 from typing import List, Dict, Tuple
 
 from .dialog_state_tracker import FeaturizedTracker
 from .response_selector import ResponseSelector
 from .state import State
+from .normalization import NormalEntity
 from src.nlu.intents.constants import Intent
 from src.map.here import HereSDK
-from src.utils import match_string
+from src.utils import match_string, datetime_range_to_string
+from src.db.schedule import ScheduleSDK
 
 
 logger = logging.getLogger(__name__)
@@ -16,23 +19,28 @@ logger.setLevel(logging.DEBUG)
 class DialogManager:
     def __init__(self, selector: ResponseSelector):
         self.here_api = HereSDK()
+        self.schedule_api = ScheduleSDK()
         self.fsm = State.START
         self.cached = {}
         self.location_tracker = FeaturizedTracker(['place', 'place_property', 'info_type',
                                                    'address', 'street', 'ward', 'district',
                                                    'activity', 'number'])
         self.path_tracker = FeaturizedTracker(['place', 'info_type'])
+        self.schedule_tracker = FeaturizedTracker(['activity', 'event', 'date', 'time'])
         self.selector = selector
 
     def reset_state(self):
         self._set_state(State.START)
 
-    def handle(self, intent: Intent, entities: List, **kwargs) -> Tuple[str, any]:
+    def handle(self, intent: Intent, entities: List[NormalEntity], **kwargs) -> Tuple[str, any]:
         entities_list = [[entity.name, entity.value] for entity in entities] # Reformat entities
 
         if self.fsm == State.START:
             if intent == Intent.location:
                 self._set_state(State.LOCATION)
+
+            elif intent == Intent.request_schedule:
+                self._set_state(State.REQUEST_SCHEDULE)
             
             else:
                 return 'intent_not_found', {}
@@ -111,6 +119,28 @@ class DialogManager:
             index = self.location_tracker.get_state().get('number', 0)
             item = self.cached['locations'][index]
             return 'respond_location', vars(item)
+        
+        elif self.fsm == State.REQUEST_SCHEDULE:
+            self.schedule_tracker.reset_state()
+            self.schedule_tracker.update_state(entities_list)
+            current_state = self.schedule_tracker.get_state()
+            if 'time' in current_state or 'date' in current_state:
+                self._set_state(State.REQUESTING_SCHEDULE)
+            else:
+                self._set_state(State.ASK_DATE_TIME)
+        
+        elif self.fsm == State.REQUESTING_SCHEDULE:
+            items = self.execute(intent, entities, **kwargs)
+            current_state = self.schedule_tracker.get_state()
+            self._set_state(State.START)
+            if len(items) > 0:
+                return 'response_request_schedule', {'datetime': datetime_range_to_string(self.cached['request_schedule_time_min'], self.cached['request_schedule_time_max']),
+                                                     'events': items,
+                                                     'num_events': len(items),
+                                                     'list': ', '.join(map(lambda x: x['summary'], items))}
+            else:
+                return 'no_request_schedule', {'datetime': datetime_range_to_string(self.cached['request_schedule_time_min'], self.cached['request_schedule_time_max'])}
+
         else:
             raise Exception('Unexpected state {}'.format(self.fsm))
 
@@ -144,6 +174,20 @@ class DialogManager:
             latitude, longitude = kwargs.get(
                 'latitude'), kwargs.get('longitude')
             items = self.here_api.reverse_geocode(latitude, longitude)
+            return items
+        
+        elif self.fsm == State.REQUESTING_SCHEDULE:
+            current_state = self.schedule_tracker.get_state()
+            timeMin = datetime.now()
+            timeMax = datetime.now() + timedelta(1)
+            if 'date' in current_state:
+                minDate = datetime.combine(current_state['date'], datetime.min.time())
+                maxDate = minDate + timedelta(1)
+                self.cached['request_schedule_time_min'] = minDate
+                self.cached['request_schedule_time_max'] = maxDate
+                timeMin = minDate.astimezone().replace(microsecond=0).isoformat()
+                timeMax = maxDate.astimezone().replace(microsecond=0).isoformat()
+            items = self.schedule_api.request_schedule(timeMin=timeMin, timeMax=timeMax)
             return items
 
     def _set_state(self, state: State):
