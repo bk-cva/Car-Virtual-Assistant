@@ -59,8 +59,8 @@ class DialogManager:
         elif self.fsm == State.FIND_ADDRESS:
             items = self.execute(intent, entities, **kwargs)
             if len(items) > 0:
-                self.cached['locations'] = items
-                self._set_state(State.RETURN_LOCATION)
+                self._set_state(State.START)
+                return 'respond_address', vars(items[0])
             else:
                 self._set_state(State.NO_LOCATION)
         
@@ -137,7 +137,7 @@ class DialogManager:
                 query['housenumber'] = current_state.get('address')
             if 'district' in current_state:
                 query['district'] = current_state.get('district')
-            items = self.here_api.call_geocode(**query)
+            items = self.here_api.geocode(**query)
             return items
         
         elif self.fsm == State.FIND_CURRENT:

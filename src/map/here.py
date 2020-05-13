@@ -52,8 +52,8 @@ class HereSDK:
             logger.exception(str(e))
             return []
 
-    def call_geocode(self, housenumber: str, street: str, district: str = None,
-                     city: str = 'Hồ Chí Minh', country: str = 'VNM'):
+    def geocode(self, housenumber: str, street: str, district: str = None,
+                city: str = 'Hồ Chí Minh', country: str = 'VNM'):
         try:
             response = requests.get('https://geocoder.ls.hereapi.com/6.2/geocode.json', params={
                 'apiKey': self.api_key,
