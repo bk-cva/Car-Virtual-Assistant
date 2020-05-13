@@ -4,7 +4,7 @@ from src.dialog_manager.dialog_manager import DialogManager
 from src.dialog_manager.normalization import normalize
 from src.dialog_manager.response_selector import FirstItemSelector
 from src.nlg import NLG
-from .call_api import call_nlu, NluException
+from src.utils import call_nlu, NluException
 
 
 fh = logging.FileHandler('debug.log')
