@@ -70,9 +70,7 @@ class DialogManager:
             items = self.execute(intent, entities, **kwargs)
             self._set_state(State.START)
             if len(items) > 0:
-                return 'show_current_location', {'address': items[0].address,
-                                                 'latitude': latitude,
-                                                 'longitude': longitude}
+                return 'show_current_location', vars(items[0])
             else:
                 return 'show_current_location_alt', {'latitude': latitude,
                                                      'longitude': longitude}
@@ -112,9 +110,7 @@ class DialogManager:
             self._set_state(State.START)
             index = self.location_tracker.get_state().get('number', 0)
             item = self.cached['locations'][index]
-            return 'respond_location', {'address': item.address,
-                                        'latitude': item.latitude,
-                                        'longitude': item.longitude}
+            return 'respond_location', vars(item)
         else:
             raise Exception('Unexpected state {}'.format(self.fsm))
 
@@ -147,7 +143,7 @@ class DialogManager:
         elif self.fsm == State.FIND_CURRENT:
             latitude, longitude = kwargs.get(
                 'latitude'), kwargs.get('longitude')
-            items = self.here_api.call_reverse_geocode(latitude, longitude)
+            items = self.here_api.reverse_geocode(latitude, longitude)
             return items
 
     def _set_state(self, state: State):
