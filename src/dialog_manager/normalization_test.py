@@ -62,7 +62,7 @@ class TestNormalizeDate(unittest.TestCase):
         entity.value = 'ngày 10'
 
         self.assertEqual(normalize(entity).value, date(2020, 1, 10))
-    
+
     def test_date_error(self):
         entity = Entity()
         entity.name = 'date'
@@ -70,7 +70,7 @@ class TestNormalizeDate(unittest.TestCase):
 
         with self.assertRaises(NormalizationError):
             normalize(entity)
-    
+
     def test_date_error_2(self):
         entity = Entity()
         entity.name = 'date'
@@ -78,7 +78,7 @@ class TestNormalizeDate(unittest.TestCase):
 
         with self.assertRaises(NormalizationError):
             normalize(entity)
-    
+
     def test_date_error_3(self):
         entity = Entity()
         entity.name = 'date'
