@@ -6,5 +6,5 @@ show_current_location|Bạn đang ở gần số {houseNumber} {street} {distric
 show_current_location_alt|Không tìm được địa chỉ nào quanh đây. Vị trí hiện tại của bạn đang được hiển thị.
 select_location|Tôi đã tìm được {num_locs} địa điểm liên quan.
 no_location|Không tìm thấy địa điểm.
-response_request_schedule|Có {num_events} sự kiện sẽ diễn ra vào {datetime}, bao gồm {list}
+response_request_schedule|Có {num_events} sự kiện sẽ diễn ra vào {datetime}, bao gồm {list}.
 no_request_schedule|{datetime} không có sự kiện.
