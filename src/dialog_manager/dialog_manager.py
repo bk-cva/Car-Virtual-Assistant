@@ -129,6 +129,14 @@ class DialogManager:
             else:
                 self._set_state(State.ASK_DATE_TIME)
         
+        elif self.fsm == State.ASK_DATE_TIME:
+            self.schedule_tracker.update_state(entities_list)
+            current_state = self.schedule_tracker.get_state()
+            if 'time' in current_state or 'date' in current_state:
+                self._set_state(State.REQUESTING_SCHEDULE)
+            else:
+                return 'ask_date_time', {}
+        
         elif self.fsm == State.REQUESTING_SCHEDULE:
             items = self.execute(intent, entities, **kwargs)
             current_state = self.schedule_tracker.get_state()

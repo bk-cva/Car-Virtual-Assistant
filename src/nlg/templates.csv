@@ -8,3 +8,4 @@ select_location|Tôi đã tìm được {num_locs} địa điểm liên quan.
 no_location|Không tìm thấy địa điểm.
 response_request_schedule|Có {num_events} sự kiện sẽ diễn ra vào {datetime}, bao gồm {list}.
 no_request_schedule|{datetime} không có sự kiện.
+ask_date_time|Trong thời gian nào?
