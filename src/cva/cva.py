@@ -1,4 +1,6 @@
 import logging
+from datetime import date
+from unittest.mock import patch
 
 from src.dialog_manager.dialog_manager import DialogManager
 from src.dialog_manager.normalization import normalize
@@ -39,6 +41,11 @@ class CVA:
 
 
 if __name__ == '__main__':
+    mock_date_patcher = patch('src.dialog_manager.normalization.date')
+    mock_date = mock_date_patcher.start()
+    mock_date.today.return_value = date(2020, 5, 13)
+    mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
     cva = CVA()
     user_snapshot = []
     with open('snapshots/user_snapshot.txt', mode='r', encoding='utf-8') as file:
@@ -65,4 +72,6 @@ if __name__ == '__main__':
                 file.write(cva_response + '\n')
             file.write('\n')
             cva.manager.reset_state()
+    
+    mock_date_patcher.stop()
 
