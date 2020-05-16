@@ -115,10 +115,18 @@ class DialogManager:
                                            'num_locs': len(self.cached['locations'])}
 
         elif self.fsm == State.RETURN_LOCATION:
-            self._set_state(State.START)
             index = self.location_tracker.get_state().get('number', 0)
             item = self.cached['locations'][index]
+            self.cached['chosen_location'] = item
+            self._set_state(State.POST_RETURN_LOCATION)
             return 'respond_location', vars(item)
+
+        elif self.fsm == State.POST_RETURN_LOCATION:
+            if intent == Intent.path:
+                self.cached['destination'] = self.cached['chosen_location']
+                self._set_state(State.FIND_ROUTE)
+            else:
+                self._set_state(State.START)
         
         elif self.fsm == State.REQUEST_SCHEDULE:
             self.schedule_tracker.reset_state()
@@ -148,6 +156,14 @@ class DialogManager:
                                                      'list': ', '.join(map(lambda x: x['summary'], items))}
             else:
                 return 'no_request_schedule', {'datetime': datetime_range_to_string(self.cached['request_schedule_time_min'], self.cached['request_schedule_time_max'])}
+
+        elif self.fsm == State.FIND_ROUTE:
+            destination = self.cached['destination']
+            routes = self.here_api.calculate_route((kwargs.get('latitude'),
+                                                    kwargs.get('longitude')),
+                                                   (destination.latitude,
+                                                    destination.longitude))
+            return 'response_route', routes
 
         else:
             raise Exception('Unexpected state {}'.format(self.fsm))

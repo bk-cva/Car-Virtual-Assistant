@@ -106,15 +106,18 @@ class HereSDK:
             logger.exception(str(e))
             return []
 
-    def call_route(self, waypoint0: Tuple[float, float], waypoint1: Tuple[float, float]):
+    def calculate_route(self, origin: Tuple[float, float], destination: Tuple[float, float]):
         try:
-            response = requests.get('https://route.ls.hereapi.com/routing/7.2/calculateroute.json', params={
+            response = requests.get('https://router.hereapi.com/v8/routes', params={
                 'apiKey': self.api_key,
-                'waypoint0': 'geo!{},{}'.format(*waypoint0),
-                'waypoint1': 'geo!{},{}'.format(*waypoint1),
+                'origin': '{},{}'.format(*origin),
+                'destination': '{},{}'.format(*destination),
+                'transportMode': 'car',
+                'lang': 'vi',
+                'return': 'polyline,actions,instructions'
             })
             response.raise_for_status()
-            return response.json()['Response']['View']
+            return response.json()['routes'][0]['sections']
         except HTTPError as e:
             logger.exception(str(e))
             return []
