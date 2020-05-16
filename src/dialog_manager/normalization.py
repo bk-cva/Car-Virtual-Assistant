@@ -84,9 +84,8 @@ def normalize(entity: Entity) -> NormalEntity:
                 days_ahead = date_value - today.day
                 if days_ahead < 0:
                     # set the desired day is that day in the next month as default
-                    result.value = today.replace(month=today.month + 1, day=date_value)
+                    result.value = today.replace(month=(today.month)%12+1, day=date_value)
                 else:
                     result.value = date(today.year, today.month, date_value)
 
     return result
-
