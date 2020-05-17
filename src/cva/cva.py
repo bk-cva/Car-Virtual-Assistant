@@ -1,10 +1,12 @@
 import logging
+from datetime import date
+from unittest.mock import patch
 
 from src.dialog_manager.dialog_manager import DialogManager
 from src.dialog_manager.normalization import normalize
 from src.dialog_manager.response_selector import FirstItemSelector
 from src.nlg import NLG
-from .call_api import call_nlu, NluException
+from src.utils import call_nlu, NluException
 
 
 fh = logging.FileHandler('debug.log')
@@ -20,7 +22,10 @@ class CVA:
         self.manager = DialogManager(FirstItemSelector())
         self.nlg = NLG()
 
-    def __call__(self, utterance):
+    def reset(self):
+        self.manager.reset_state()
+
+    def __call__(self, utterance: str, latitude: float = 10.7720642, longitude: float = 106.6586572):
         try:
             intent, entities = call_nlu(utterance)
         except NluException:
@@ -31,14 +36,19 @@ class CVA:
         response = None
         while response is None:
             response = self.manager.handle(intent, entities,
-                                           latitude=10.7720642,
-                                           longitude=106.6586572)
+                                           latitude=latitude,
+                                           longitude=longitude)
 
         act, data = response
         return self.nlg(act, data), data
 
 
 if __name__ == '__main__':
+    mock_date_patcher = patch('src.dialog_manager.normalization.date')
+    mock_date = mock_date_patcher.start()
+    mock_date.today.return_value = date(2020, 5, 13)
+    mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
     cva = CVA()
     user_snapshot = []
     with open('snapshots/user_snapshot.txt', mode='r', encoding='utf-8') as file:
@@ -65,4 +75,6 @@ if __name__ == '__main__':
                 file.write(cva_response + '\n')
             file.write('\n')
             cva.manager.reset_state()
+    
+    mock_date_patcher.stop()
 

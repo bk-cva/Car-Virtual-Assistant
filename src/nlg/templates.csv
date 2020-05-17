@@ -1,7 +1,12 @@
 default|Đã xảy ra lỗi.
 intent_not_found|Xin lỗi, tôi không hiểu ý bạn.
-respond_location|{address}
-show_current_location|Bạn đang ở gần {address}.
+respond_location|Bạn có thể xem vị trí của {title}, ở số {houseNumber} {street} {district} {city} trên bản đồ.
+respond_address|Vị trí cần tìm đang hiển thị trên bản đồ.
+show_current_location|Bạn đang ở gần số {houseNumber} {street} {district} {city}.
 show_current_location_alt|Không tìm được địa chỉ nào quanh đây. Vị trí hiện tại của bạn đang được hiển thị.
 select_location|Tôi đã tìm được {num_locs} địa điểm liên quan.
 no_location|Không tìm thấy địa điểm.
+respond_request_schedule|Có {num_events} sự kiện sẽ diễn ra vào {datetime}, bao gồm {list}.
+no_request_schedule|{datetime} không có sự kiện.
+ask_date_time|Trong thời gian nào?
+respond_route|Tôi đã tìm được đường đến {title}. Chúc bạn lái xe vui vẻ.

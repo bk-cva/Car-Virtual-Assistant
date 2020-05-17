@@ -35,21 +35,25 @@ class HereSDK:
             })
             response.raise_for_status()
             results = []
-            for res in response.json()['items']:
+            for item in response.json()['items']:
                 results.append(SearchResult(
-                    title=res['title'],
-                    address=res['address']['label'],
-                    latitude=res['position']['lat'],
-                    longitude=res['position']['lng'],
-                    distance=res['distance']
+                    title=item['title'],
+                    address=item['address']['label'],
+                    houseNumber=item['address'].get('houseNumber'),
+                    street=item['address'].get('street'),
+                    district=item['address'].get('district'),
+                    city=item['address'].get('city'),
+                    latitude=item['position']['lat'],
+                    longitude=item['position']['lng'],
+                    distance=item['distance']
                 ))
             return results
         except HTTPError as e:
             logger.exception(str(e))
             return []
 
-    def call_geocode(self, housenumber: str, street: str, district: str = None,
-                     city: str = 'Hồ Chí Minh', country: str = 'VNM'):
+    def geocode(self, housenumber: str, street: str, district: str = None,
+                city: str = 'Hồ Chí Minh', country: str = 'VNM'):
         try:
             response = requests.get('https://geocoder.ls.hereapi.com/6.2/geocode.json', params={
                 'apiKey': self.api_key,
@@ -76,40 +80,44 @@ class HereSDK:
             logger.exception(str(e))
             return []
     
-    def call_reverse_geocode(self, latitude: float, longitude: float):
+    def reverse_geocode(self, latitude: float, longitude: float) -> SearchResult:
         try:
-            response = requests.get('https://reverse.geocoder.ls.hereapi.com/6.2/reversegeocode.json', params={
+            response = requests.get('https://revgeocode.search.hereapi.com/v1/revgeocode', params={
                 'apiKey': self.api_key,
-                'prox': '{},{},500'.format(latitude, longitude),
-                'mode': 'retrieveAll',
-                'maxresults': 1,
+                'at': '{},{}'.format(latitude, longitude),
+                'limit': 1,
             })
             response.raise_for_status()
-            view = response.json()['Response']['View']
-            if len(view) > 0:
-                results = []
-                for res in view[0]['Result']:
-                    results.append(SearchResult(
-                        title=res['Location']['Address']['Label'],
-                        address=res['Location']['Address']['Label'],
-                        latitude=res['Location']['DisplayPosition']['Latitude'],
-                        longitude=res['Location']['DisplayPosition']['Longitude']))
-                return results
-            else:
-                return []
+            results = []
+            for item in response.json()['items']:
+                results.append(SearchResult(
+                    title=item['title'],
+                    address=item['address']['label'],
+                    houseNumber=item['address'].get('houseNumber'),
+                    street=item['address'].get('street'),
+                    district=item['address'].get('district'),
+                    city=item['address'].get('city'),
+                    latitude=item['position']['lat'],
+                    longitude=item['position']['lng'],
+                    distance=item['distance']
+                ))
+            return results
         except HTTPError as e:
             logger.exception(str(e))
             return []
 
-    def call_route(self, waypoint0: Tuple[float, float], waypoint1: Tuple[float, float]):
+    def calculate_route(self, origin: Tuple[float, float], destination: Tuple[float, float]):
         try:
-            response = requests.get('https://route.ls.hereapi.com/routing/7.2/calculateroute.json', params={
+            response = requests.get('https://router.hereapi.com/v8/routes', params={
                 'apiKey': self.api_key,
-                'waypoint0': 'geo!{},{}'.format(*waypoint0),
-                'waypoint1': 'geo!{},{}'.format(*waypoint1),
+                'origin': '{},{}'.format(*origin),
+                'destination': '{},{}'.format(*destination),
+                'transportMode': 'car',
+                'lang': 'vi',
+                'return': 'polyline,actions,instructions'
             })
             response.raise_for_status()
-            return response.json()['Response']['View']
+            return response.json()['routes'][0]['sections']
         except HTTPError as e:
             logger.exception(str(e))
             return []
