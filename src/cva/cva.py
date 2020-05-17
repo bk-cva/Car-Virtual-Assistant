@@ -22,7 +22,10 @@ class CVA:
         self.manager = DialogManager(FirstItemSelector())
         self.nlg = NLG()
 
-    def __call__(self, utterance):
+    def reset(self):
+        self.manager.reset_state()
+
+    def __call__(self, utterance: str, latitude: float = 10.7720642, longitude: float = 106.6586572):
         try:
             intent, entities = call_nlu(utterance)
         except NluException:
@@ -33,8 +36,8 @@ class CVA:
         response = None
         while response is None:
             response = self.manager.handle(intent, entities,
-                                           latitude=10.7720642,
-                                           longitude=106.6586572)
+                                           latitude=latitude,
+                                           longitude=longitude)
 
         act, data = response
         return self.nlg(act, data), data

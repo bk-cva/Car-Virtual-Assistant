@@ -8,3 +8,4 @@ spacy==2.2.4
 pyvi==0.0.9.7
 python-dotenv==0.12.0
 fuzzywuzzy==0.18.0
+websockets==8.1

@@ -217,6 +217,7 @@ class DialogManager:
                                            'num_locs': len(self.cached['locations'])}
 
         elif self.fsm == State.FIND_ROUTE:
+            self._set_state(State.START)
             destination = self.cached['destination']
             routes = self.here_api.calculate_route((kwargs.get('latitude'),
                                                     kwargs.get('longitude')),
