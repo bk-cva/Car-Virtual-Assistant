@@ -201,11 +201,3 @@ def normalize(entity: Entity) -> NormalEntity:
             result.value = (start_time, end_time)
 
     return result
-
-
-if __name__ == "__main__":
-    import sys
-    s = sys.argv[1]
-    entity = Entity(name='time', value=s)
-    result = normalize(entity)
-    print(result.value)
