@@ -109,11 +109,11 @@ def normalize(entity: Entity) -> NormalEntity:
                 start_time = time(hours, 30)
                 end_time = time(hours, 30 + OFFSET_TIME)
             elif type_space == 'kém':
-                start_time = time(hours - 1, 60 - OFFSET_TIME)
+                start_time = time(hours - 1, 30)
                 end_time = time(hours)
             elif type_space == 'hơn':
-                start_time = time(hours, OFFSET_TIME)
-                end_time = time(hours, 2 * OFFSET_TIME)
+                start_time = time(hours)
+                end_time = time(hours, 30)
             else:
                 start_time = time(hours, mins)
                 end_time = time(hours, mins + OFFSET_TIME)
