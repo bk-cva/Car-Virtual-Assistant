@@ -40,7 +40,7 @@ class CVA:
                                            longitude=longitude)
 
         act, data = response
-        return self.nlg(act, data), data
+        return self.nlg(act, data), data, intent, entities
 
 
 if __name__ == '__main__':

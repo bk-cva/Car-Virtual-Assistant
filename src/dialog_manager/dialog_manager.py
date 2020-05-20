@@ -233,6 +233,8 @@ class DialogManager:
     def execute(self, intent: Intent, entities: List, **kwargs) -> Tuple[str, any]:
         if self.fsm == State.FIND_LOCATION or self.fsm == State.ROUTE_FIND_PLACE:
             current_state = self.location_tracker.get_state()
+            if self.fsm == State.ROUTE_FIND_PLACE:
+                current_state = self.path_tracker.get_state()
             query = current_state.get('place', current_state.get('activity'))
             if 'street' in current_state:
                 query += ' đường ' + current_state['street']
