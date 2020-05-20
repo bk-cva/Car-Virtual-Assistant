@@ -1,0 +1,18 @@
+version: '3.2'
+services:
+  core:
+    build:
+      context: .
+    ports:
+    - "5000:5000"
+    links:
+      - "redis"
+    depends_on:
+      - redis
+    volumes:
+      - "./debug.log:/app/debug.log"
+
+  redis:
+    image: redis
+    expose:
+      - "6379"
