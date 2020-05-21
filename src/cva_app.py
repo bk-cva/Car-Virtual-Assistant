@@ -25,7 +25,7 @@ redis = redis.from_url('redis://redis:6379/0')
 cva = CVA()
 
 
-class Backend(object):
+class Broker(object):
     """Interface for registering and updating WebSocket clients."""
 
     def __init__(self):
@@ -65,8 +65,8 @@ class Backend(object):
         gevent.spawn(self.run)
 
 
-be = Backend()
-be.start()
+broker = Broker()
+broker.start()
 
 
 @app.errorhandler(500)
@@ -102,7 +102,7 @@ def cva_handler():
 
 @sockets.route('/')
 def outbox(ws):
-    be.register(ws)
+    broker.register(ws)
 
     while not ws.closed:
         gevent.sleep(0.1)
