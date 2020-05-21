@@ -4,7 +4,7 @@ from requests.exceptions import HTTPError
 from typing import Tuple, List
 
 from ..common.config_manager import ConfigManager
-from .entities import SearchResult
+from .entities import HerePlace, Place
 
 
 logger = logging.getLogger(__name__)
@@ -16,15 +16,15 @@ class HereSDK:
             api_key = ConfigManager().get('HERE_API_KEY')
         self.api_key = api_key
 
-    def search(self, at: Tuple[float, float], q: str) -> List[SearchResult]:
-        """Get suggestions by query string
+    def search(self, at: Tuple[float, float], q: str) -> List[HerePlace]:
+        """Search places by query
 
         Args:
             at: nearby geo location
             q: query string
 
         Returns:
-            list of SearchResults
+            list of HerePlace
         """
         try:
             response = requests.get('https://discover.search.hereapi.com/v1/discover', params={
@@ -36,17 +36,7 @@ class HereSDK:
             response.raise_for_status()
             results = []
             for item in response.json()['items']:
-                results.append(SearchResult(
-                    title=item['title'],
-                    address=item['address']['label'],
-                    houseNumber=item['address'].get('houseNumber'),
-                    street=item['address'].get('street'),
-                    district=item['address'].get('district'),
-                    city=item['address'].get('city'),
-                    latitude=item['position']['lat'],
-                    longitude=item['position']['lng'],
-                    distance=item['distance']
-                ))
+                results.append(HerePlace(item))
             return results
         except HTTPError as e:
             logger.exception(str(e))
@@ -68,7 +58,7 @@ class HereSDK:
             if len(view) > 0:
                 results = []
                 for res in view[0]['Result']:
-                    results.append(SearchResult(
+                    results.append(Place(
                         title=res['Location']['Address']['Label'],
                         address=res['Location']['Address']['Label'],
                         latitude=res['Location']['DisplayPosition']['Latitude'],
@@ -80,7 +70,7 @@ class HereSDK:
             logger.exception(str(e))
             return []
     
-    def reverse_geocode(self, latitude: float, longitude: float) -> SearchResult:
+    def reverse_geocode(self, latitude: float, longitude: float) -> List[HerePlace]:
         try:
             response = requests.get('https://revgeocode.search.hereapi.com/v1/revgeocode', params={
                 'apiKey': self.api_key,
@@ -90,17 +80,7 @@ class HereSDK:
             response.raise_for_status()
             results = []
             for item in response.json()['items']:
-                results.append(SearchResult(
-                    title=item['title'],
-                    address=item['address']['label'],
-                    houseNumber=item['address'].get('houseNumber'),
-                    street=item['address'].get('street'),
-                    district=item['address'].get('district'),
-                    city=item['address'].get('city'),
-                    latitude=item['position']['lat'],
-                    longitude=item['position']['lng'],
-                    distance=item['distance']
-                ))
+                results.append(HerePlace(item))
             return results
         except HTTPError as e:
             logger.exception(str(e))
