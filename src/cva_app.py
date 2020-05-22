@@ -11,10 +11,14 @@ from src.proto import rest_api_pb2
 from src.cva import CVA
 
 
+fh = logging.FileHandler('debug.log')
+fh.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
+fh.setFormatter(formatter)
+logger = logging.getLogger()
+logger.addHandler(fh)
+
 app = Flask(__name__)
-gunicorn_logger = logging.getLogger('gunicorn.error')
-app.logger.handlers = gunicorn_logger.handlers
-app.logger.setLevel(gunicorn_logger.level)
 CORS(app)
 
 sockets = Sockets(app)
@@ -37,12 +41,12 @@ class Broker(object):
         for message in self.pubsub.listen():
             data = message.get('data')
             if message['type'] == 'message':
-                app.logger.info('Sending message: {}'.format(data))
+                logger.info('Sending message: {}'.format(data))
                 yield data
 
     def register(self, client):
         """Register a WebSocket connection for Redis updates."""
-        app.logger.info('New client')
+        logger.info('New client')
         self.clients.append(client)
 
     def send(self, client, data):
@@ -51,7 +55,7 @@ class Broker(object):
         try:
             client.send(data)
         except Exception:
-            app.logger.info("Remove client")
+            logger.info("Remove client")
             self.clients.remove(client)
 
     def run(self):
@@ -71,7 +75,7 @@ broker.start()
 
 @app.errorhandler(500)
 def server_error(e):
-    app.logger.exception(str(e))
+    logger.exception(str(e))
     return make_response(__make_json_response_error(str(e)), 500)
 
 
