@@ -22,9 +22,9 @@ class NLG:
     def __call__(self, action, substitutes: Dict) -> str:
         if action in self.templates:
             response = self.templates[action].format(**substitutes)
-            return self._clean(response)
+            return action, self._clean(response)
         logger.warning('No template found for \'{}\', use default.'.format(action))
-        return self.templates['default']
+        return action, self.templates['default']
 
     def _clean(self, text):
         text = self.html_tag.sub(' ', text)

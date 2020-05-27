@@ -88,6 +88,7 @@ def cva_handler():
 
         response, metadata, intent = cva(utterance)
         redis.publish(REDIS_CHANNEL, json.dumps({
+            'topic': 'message',
             'user_id': user_id,
             'utterance': utterance,
             'response': response,
@@ -96,6 +97,9 @@ def cva_handler():
         }, default=lambda x: x.__dict__))
     elif topic == 'reset_cva':
         cva.reset()
+        redis.publish(REDIS_CHANNEL, json.dumps({
+            'topic': 'reset',
+        }))
     else:
         raise Exception('Unknown topic.')
     return make_response(jsonify({
