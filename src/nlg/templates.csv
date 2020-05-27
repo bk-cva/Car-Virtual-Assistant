@@ -10,3 +10,4 @@ respond_request_schedule|Có {num_events} sự kiện sẽ diễn ra vào {datet
 no_request_schedule|{datetime} không có sự kiện.
 ask_date_time|Trong thời gian nào?
 respond_route|Tôi đã tìm được đường đến {title}. Chúc bạn lái xe vui vẻ.
+ask_place|Bạn muốn đi đâu?

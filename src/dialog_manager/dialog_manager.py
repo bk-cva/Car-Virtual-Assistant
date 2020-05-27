@@ -21,20 +21,18 @@ class DialogManager:
         self.here_api = HereSDK()
         self.schedule_api = ScheduleSDK()
         self.fsm = State.START
+        self.main_intent = None
         self.cached = {
             'select_location_count': 0
         }
-        self.location_tracker = FeaturizedTracker(['place', 'place_property', 'info_type',
-                                                   'address', 'street', 'ward', 'district',
-                                                   'activity', 'number'])
-        self.path_tracker = FeaturizedTracker(['place', 'place_property', 'route_property',
-                                               'info_type', 'address', 'street', 'ward', 'district',
-                                               'activity', 'number'])
-        self.schedule_tracker = FeaturizedTracker(['activity', 'event', 'date', 'time'])
+        self.tracker = FeaturizedTracker(['place', 'place_property', 'route_property', 'info_type',
+                                          'address', 'street', 'ward', 'district',
+                                          'activity', 'event', 'number', 'date', 'time'])
         self.selector = selector
 
     def reset_state(self):
         self._set_state(State.START)
+        self._set_main_intent(None)
 
     def handle(self, intent: Intent, entities: List[NormalEntity], **kwargs) -> Tuple[str, any]:
         entities_list = [[entity.name, entity.value] for entity in entities] # Reformat entities
@@ -42,20 +40,23 @@ class DialogManager:
         if self.fsm == State.START:
             if intent == Intent.location:
                 self._set_state(State.LOCATION)
+                self._set_main_intent(Intent.location)
 
             elif intent == Intent.request_schedule:
                 self._set_state(State.REQUEST_SCHEDULE)
+                self._set_main_intent(Intent.request_schedule)
             
             elif intent == Intent.path:
                 self._set_state(State.ROUTE)
+                self._set_main_intent(Intent.path)
             
             else:
                 return 'intent_not_found', {}
         
         elif self.fsm == State.LOCATION:
-            self.location_tracker.reset_state()
-            self.location_tracker.update_state(entities_list)
-            current_state = self.location_tracker.get_state()
+            self.tracker.reset_state()
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
             if 'place' in current_state or 'activity' in current_state:
                 self._set_state(State.FIND_LOCATION)
             elif 'street' in current_state:
@@ -97,26 +98,31 @@ class DialogManager:
         elif self.fsm == State.AUTO_SELECT:
             items = self.cached['locations']
             if len(items) == 1:
-                self._set_state(State.RETURN_LOCATION)
+                if self.main_intent == Intent.location:
+                    self._set_state(State.RETURN_LOCATION)
+                else:
+                    self._set_state(State.FIND_ROUTE)
             else:
                 query = self.cached['location_query']
                 matched_items = []
                 for item in items:
                     if match_string(query, item.title):
                         matched_items.append(item)
-                if len(matched_items) == 0:
-                    self._set_state(State.SELECT_LOCATION)
-                else:
-                    self.cached['locations'] = matched_items
-                    if len(matched_items) == 1:
+                if len(matched_items) == 1:
+                    if self.main_intent == Intent.location:
                         self._set_state(State.RETURN_LOCATION)
                     else:
-                        self._set_state(State.SELECT_LOCATION)
+                        self._set_state(State.FIND_ROUTE)
+                else:
+                    self._set_state(State.SELECT_LOCATION)
 
         elif self.fsm == State.SELECT_LOCATION:
             if intent == Intent.select_item:
-                self.location_tracker.update_state(entities_list)
-                self._set_state(State.RETURN_LOCATION)
+                self.tracker.update_state(entities_list)
+                if self.main_intent == Intent.location:
+                    self._set_state(State.RETURN_LOCATION)
+                else:
+                    self._set_state(State.FIND_ROUTE)
             else:
                 self.cached['select_location_count'] += 1
                 if self.cached['select_location_count'] > 1:
@@ -128,7 +134,7 @@ class DialogManager:
                                                'num_locs': len(self.cached['locations'])}
 
         elif self.fsm == State.RETURN_LOCATION:
-            index = self.location_tracker.get_state().get('number', 0)
+            index = self.tracker.get_state('number', 0)
             item = self.cached['locations'][index]
             self.cached['chosen_location'] = item
             self._set_state(State.POST_RETURN_LOCATION)
@@ -142,17 +148,17 @@ class DialogManager:
                 self._set_state(State.START)
         
         elif self.fsm == State.REQUEST_SCHEDULE:
-            self.schedule_tracker.reset_state()
-            self.schedule_tracker.update_state(entities_list)
-            current_state = self.schedule_tracker.get_state()
+            self.tracker.reset_state()
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
             if 'time' in current_state or 'date' in current_state:
                 self._set_state(State.REQUESTING_SCHEDULE)
             else:
                 self._set_state(State.ASK_DATE_TIME)
         
         elif self.fsm == State.ASK_DATE_TIME:
-            self.schedule_tracker.update_state(entities_list)
-            current_state = self.schedule_tracker.get_state()
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
             if 'time' in current_state or 'date' in current_state:
                 self._set_state(State.REQUESTING_SCHEDULE)
             else:
@@ -160,7 +166,7 @@ class DialogManager:
         
         elif self.fsm == State.REQUESTING_SCHEDULE:
             items = self.execute(intent, entities, **kwargs)
-            current_state = self.schedule_tracker.get_state()
+            current_state = self.tracker.get_state()
             self._set_state(State.START)
             if len(items) > 0:
                 return 'respond_request_schedule', {'datetime': datetime_range_to_string(self.cached['request_schedule_time_min'], self.cached['request_schedule_time_max']),
@@ -171,54 +177,25 @@ class DialogManager:
                 return 'no_request_schedule', {'datetime': datetime_range_to_string(self.cached['request_schedule_time_min'], self.cached['request_schedule_time_max'])}
 
         elif self.fsm == State.ROUTE:
-            self.path_tracker.update_state(entities_list)
-            current_state = self.path_tracker.get_state()
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
             if 'place' in current_state:
-                self._set_state(State.ROUTE_FIND_PLACE)
+                self._set_state(State.FIND_LOCATION)
             else:
                 self._set_state(State.ASK_PLACE)
-
-        elif self.fsm == State.ROUTE_FIND_PLACE:
-            items = self.execute(intent, entities, **kwargs)
-            if len(items) > 0:
-                self.cached['locations'] = items
-                self._set_state(State.ROUTE_AUTO_SELECT)
+        
+        elif self.fsm == State.ASK_PLACE:
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
+            if 'place' in current_state:
+                self._set_state(State.FIND_LOCATION)
             else:
-                self._set_state(State.NO_LOCATION)
-
-        elif self.fsm == State.ROUTE_AUTO_SELECT:
-            items = self.cached['locations']
-            if len(items) == 1:
-                self.cached['destination'] = items[0]
-                self._set_state(State.FIND_ROUTE)
-            else:
-                query = self.cached['location_query']
-                matched_items = []
-                for item in items:
-                    if match_string(query, item.title):
-                        matched_items.append(item)
-                if len(matched_items) == 0:
-                    self._set_state(State.ROUTE_SELECT_LOCATION)
-                else:
-                    self.cached['locations'] = matched_items
-                    if len(matched_items) == 1:
-                        self.cached['destination'] = matched_items[0]
-                        self._set_state(State.FIND_ROUTE)
-                    else:
-                        self._set_state(State.ROUTE_SELECT_LOCATION)
-
-        elif self.fsm == State.ROUTE_SELECT_LOCATION:
-            if intent == Intent.select_item:
-                self.path_tracker.update_state(entities_list)
-                self.cached['destination'] = self.cached['locations'][self.path_tracker.get_state['number']]
-                self._set_state(State.FIND_ROUTE)
-            else:
-                return 'select_location', {'locations': self.cached['locations'],
-                                           'num_locs': len(self.cached['locations'])}
+                return 'ask_place', {}
 
         elif self.fsm == State.FIND_ROUTE:
             self._set_state(State.START)
-            destination = self.cached['destination']
+            index = self.tracker.get_state('number', 0)
+            destination = self.cached['locations'][index]
             routes = self.here_api.calculate_route((kwargs.get('latitude'),
                                                     kwargs.get('longitude')),
                                                    (destination.latitude,
@@ -231,10 +208,8 @@ class DialogManager:
         return None
 
     def execute(self, intent: Intent, entities: List, **kwargs) -> Tuple[str, any]:
-        if self.fsm == State.FIND_LOCATION or self.fsm == State.ROUTE_FIND_PLACE:
-            current_state = self.location_tracker.get_state()
-            if self.fsm == State.ROUTE_FIND_PLACE:
-                current_state = self.path_tracker.get_state()
+        current_state = self.tracker.get_state()
+        if self.fsm == State.FIND_LOCATION:
             query = current_state.get('place', current_state.get('activity'))
             if 'street' in current_state:
                 query += ' đường ' + current_state['street']
@@ -247,7 +222,6 @@ class DialogManager:
             return items
 
         elif self.fsm == State.FIND_ADDRESS:
-            current_state = self.location_tracker.get_state()
             query = {'street': current_state.get('street')}
             if 'address' in current_state:
                 query['housenumber'] = current_state.get('address')
@@ -263,7 +237,6 @@ class DialogManager:
             return items
         
         elif self.fsm == State.REQUESTING_SCHEDULE:
-            current_state = self.schedule_tracker.get_state()
             timeMin = datetime.now()
             timeMax = datetime.now() + timedelta(1)
             if 'date' in current_state:
@@ -279,3 +252,7 @@ class DialogManager:
     def _set_state(self, state: State):
         logger.debug('Change state: {} -> {}'.format(self.fsm.name, state.name))
         self.fsm = state
+    
+
+    def _set_main_intent(self, intent: Intent):
+        self.main_intent = intent

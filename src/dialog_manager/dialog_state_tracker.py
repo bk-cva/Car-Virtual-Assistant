@@ -41,10 +41,12 @@ class FeaturizedTracker:
 
         self.current_features = bin_feats
 
-    def get_state(self):
+    def get_state(self, slot_name: str = None, default_value: any = None):
         lasts = {}
         for slot, value in self.history:
             lasts[slot] = value
+        if slot_name is not None:
+            return lasts.get(slot_name, default_value)
         return lasts
 
     def reset_state(self):
