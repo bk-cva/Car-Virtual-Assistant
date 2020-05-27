@@ -115,6 +115,8 @@ class DialogManager:
                         self._set_state(State.FIND_ROUTE)
                 else:
                     self._set_state(State.SELECT_LOCATION)
+                    return 'select_location', {'locations': self.cached['locations'],
+                                               'num_locs': len(self.cached['locations'])}
 
         elif self.fsm == State.SELECT_LOCATION:
             if intent == Intent.select_item:
@@ -124,14 +126,7 @@ class DialogManager:
                 else:
                     self._set_state(State.FIND_ROUTE)
             else:
-                self.cached['select_location_count'] += 1
-                if self.cached['select_location_count'] > 1:
-                    self._set_state(State.START)
-                    self.cached['select_location_count'] = 0
-                    return 'intent_not_found', {}
-                else:
-                    return 'select_location', {'locations': self.cached['locations'],
-                                               'num_locs': len(self.cached['locations'])}
+                self._set_state(State.START)
 
         elif self.fsm == State.RETURN_LOCATION:
             index = self.tracker.get_state('number', 0)
