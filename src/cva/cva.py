@@ -32,4 +32,4 @@ class CVA:
                                            longitude=longitude)
 
         act, data = response
-        return self.nlg(act, data), data, intent, entities
+        return self.nlg(act, data), data, intent

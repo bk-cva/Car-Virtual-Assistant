@@ -86,14 +86,13 @@ def cva_handler():
     if topic == 'request_cva':
         user_id, utterance = [request[k] for k in ['user_id', 'utterance']]
 
-        response, metadata, intent, entities = cva(utterance)
+        response, metadata, intent = cva(utterance)
         redis.publish(REDIS_CHANNEL, json.dumps({
             'user_id': user_id,
             'utterance': utterance,
             'response': response,
             'metadata': metadata,
             'intent': intent,
-            'entities': entities
         }, default=lambda x: x.__dict__))
     elif topic == 'reset_cva':
         cva.reset()
