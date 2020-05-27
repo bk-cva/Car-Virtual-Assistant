@@ -16,12 +16,13 @@ class HereSDK:
             api_key = ConfigManager().get('HERE_API_KEY')
         self.api_key = api_key
 
-    def search(self, at: Tuple[float, float], q: str) -> List[HerePlace]:
+    def search(self, at: Tuple[float, float], q: str, limit: int = 3) -> List[HerePlace]:
         """Search places by query
 
         Args:
             at: nearby geo location
             q: query string
+            limit: maximum number of results
 
         Returns:
             list of HerePlace
@@ -30,7 +31,7 @@ class HereSDK:
             response = requests.get('https://discover.search.hereapi.com/v1/discover', params={
                 'apiKey': self.api_key,
                 'at': ','.join(map(str, at)),
-                'limit': 10,
+                'limit': limit,
                 'q': q,
             })
             response.raise_for_status()
