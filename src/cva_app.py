@@ -16,6 +16,7 @@ fh.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
 fh.setFormatter(formatter)
 logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 logger.addHandler(fh)
 
 app = Flask(__name__)
@@ -83,18 +84,21 @@ def server_error(e):
 def cva_handler():
     request = flask_request.get_json()
     topic = request['topic']
+    data = {}
     if topic == 'request_cva':
         user_id, utterance = [request[k] for k in ['user_id', 'utterance']]
-
         response, metadata, intent = cva(utterance)
-        redis.publish(REDIS_CHANNEL, json.dumps({
+
+        data = {
             'topic': 'message',
             'user_id': user_id,
             'utterance': utterance,
             'response': response,
             'metadata': metadata,
             'intent': intent,
-        }, default=lambda x: x.__dict__))
+        }
+
+        redis.publish(REDIS_CHANNEL, json.dumps(data, default=lambda x: x.__dict__))
     elif topic == 'reset_cva':
         cva.reset()
         redis.publish(REDIS_CHANNEL, json.dumps({
@@ -103,7 +107,8 @@ def cva_handler():
     else:
         raise Exception('Unknown topic.')
     return make_response(jsonify({
-        'status': 'ok'
+        'status': 'ok',
+        **data
     }), 200)
 
 

@@ -9,12 +9,17 @@ from src.nlg import NLG
 from src.utils import call_nlu, NluException
 
 
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+
 class CVA:
     def __init__(self):
         self.manager = DialogManager(FirstItemSelector())
         self.nlg = NLG()
 
     def reset(self):
+        logger.debug('Reset state.')
         self.manager.reset_state()
 
     def __call__(self, utterance: str, latitude: float = 10.7720642, longitude: float = 106.6586572):
