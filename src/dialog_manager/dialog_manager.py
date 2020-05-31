@@ -104,20 +104,32 @@ class DialogManager:
                     self._set_state(State.FIND_ROUTE)
             else:
                 query = self.cached['location_query']
-                matched_items = []
-                for index, item in enumerate(items):
-                    if match_string(query, item.title):
-                        matched_items.append(index)
-                if len(matched_items) == 1:
-                    self.tracker.update_state([('number', matched_items[0])])
-                    if self.main_intent == Intent.location:
-                        self._set_state(State.RETURN_LOCATION)
-                    else:
-                        self._set_state(State.FIND_ROUTE)
+                place_property = self.tracker.get_state('place_property')
+                if place_property is not None:
+                    if place_property == 'gần nhất':
+                        print([(item.title, item.distance) for item in items])
+                        index = min(enumerate(items), key=lambda x: x[1].distance)[0]
+                        print(index)
+                        self.tracker.update_state([('number', index)])
+                        if self.main_intent == Intent.location:
+                            self._set_state(State.RETURN_LOCATION)
+                        else:
+                            self._set_state(State.FIND_ROUTE)
                 else:
-                    self._set_state(State.SELECT_LOCATION)
-                    return 'select_location', {'locations': self.cached['locations'],
-                                               'num_locs': len(self.cached['locations'])}
+                    matched_items = []
+                    for index, item in enumerate(items):
+                        if match_string(query, item.title):
+                            matched_items.append(index)
+                    if len(matched_items) == 1:
+                        self.tracker.update_state([('number', matched_items[0])])
+                        if self.main_intent == Intent.location:
+                            self._set_state(State.RETURN_LOCATION)
+                        else:
+                            self._set_state(State.FIND_ROUTE)
+                    else:
+                        self._set_state(State.SELECT_LOCATION)
+                        return 'select_location', {'locations': self.cached['locations'],
+                                                'num_locs': len(self.cached['locations'])}
 
         elif self.fsm == State.SELECT_LOCATION:
             if intent == Intent.select_item:

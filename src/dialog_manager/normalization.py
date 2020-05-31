@@ -23,8 +23,11 @@ NORMALIZE_ENTITY_DICT = {
         2: ['mốt', 'ngày mốt'],
     },
     'info_type': {
-        'khoảng cách': ['bao xa'],
-        'thời gian': ['bao lâu'],
+        'khoảng cách': ['bao xa', 'xa'],
+        'thời gian': ['bao lâu', 'lâu'],
+    },
+    'place_property': {
+        'gần nhất': ['gần nhất', 'gần đây nhất', 'xung quanh', 'gần đây']
     }
 }
 
