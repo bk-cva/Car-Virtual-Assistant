@@ -39,7 +39,7 @@ with open('snapshots/cva_snapshot.txt', mode='w', encoding='utf-8') as file:
             break
         user_conversation = user_snapshot.pop(0)
         for utter in user_conversation:
-            cva_response = cva(utter)[0]
+            cva_response = cva(utter)[0][1]
             file.write(cva_response + '\n')
         file.write('\n')
         cva.manager.reset_state()
