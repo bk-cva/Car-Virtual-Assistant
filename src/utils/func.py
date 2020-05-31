@@ -41,7 +41,8 @@ class NluException(Exception):
 
 
 def match_string(target: str, value: str) -> bool:
-    distance = fuzz.partial_ratio(target, value)
+    distance = fuzz.ratio(target.lower(), value.lower())
+    logging.debug('Search term: {}. Result: {}. Distance: {}'.format(target, value, distance))
     if distance >= 90:
         return True
     return False

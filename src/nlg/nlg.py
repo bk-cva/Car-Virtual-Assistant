@@ -20,6 +20,13 @@ class NLG:
                 self.templates[row[0]] = row[1]
 
     def __call__(self, action, substitutes: Dict) -> str:
+        # preprocess substitutes
+        for k, v in substitutes.items():
+            if v is None:
+                substitutes[k] = ''
+        if 'street' in substitutes:
+            substitutes['street'] = re.sub(r'^đường', '', substitutes['street'], flags=re.IGNORECASE)
+
         if action in self.templates:
             response = self.templates[action].format(**substitutes)
             return action, self._clean(response)

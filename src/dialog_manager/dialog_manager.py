@@ -22,9 +22,7 @@ class DialogManager:
         self.schedule_api = ScheduleSDK()
         self.fsm = State.START
         self.main_intent = None
-        self.cached = {
-            'select_location_count': 0
-        }
+        self.cached = {}
         self.tracker = FeaturizedTracker(['place', 'place_property', 'route_property', 'info_type',
                                           'address', 'street', 'ward', 'district',
                                           'activity', 'event', 'number', 'date', 'time'])
@@ -33,6 +31,8 @@ class DialogManager:
     def reset_state(self):
         self._set_state(State.START)
         self._set_main_intent(None)
+        self.cached = {}
+        self.tracker.reset_state()
 
     def handle(self, intent: Intent, entities: List[NormalEntity], **kwargs) -> Tuple[str, any]:
         entities_list = [[entity.name, entity.value] for entity in entities] # Reformat entities
@@ -105,10 +105,11 @@ class DialogManager:
             else:
                 query = self.cached['location_query']
                 matched_items = []
-                for item in items:
+                for index, item in enumerate(items):
                     if match_string(query, item.title):
-                        matched_items.append(item)
+                        matched_items.append(index)
                 if len(matched_items) == 1:
+                    self.tracker.update_state([('number', matched_items[0])])
                     if self.main_intent == Intent.location:
                         self._set_state(State.RETURN_LOCATION)
                     else:
@@ -131,17 +132,29 @@ class DialogManager:
         elif self.fsm == State.RETURN_LOCATION:
             index = self.tracker.get_state('number', 0)
             item = self.cached['locations'][index]
-            self.cached['chosen_location'] = item
             self._set_state(State.POST_RETURN_LOCATION)
-            return 'respond_location', vars(item)
+
+            info_type = self.tracker.get_state('info_type')
+            if info_type is not None:
+                if info_type == 'đường':
+                    return 'respond_location_street', vars(item)
+                elif info_type == 'quận':
+                    return 'respond_location_district', vars(item)
+                elif info_type == 'khoảng cách':
+                    return 'respond_location_distance', vars(item)
+            if len(self.cached['locations']) > 1:
+                return 'respond_location', vars(item)
+            else:
+                return 'respond_location_single', vars(item)
 
         elif self.fsm == State.POST_RETURN_LOCATION:
-            if intent == Intent.path:
-                self.cached['destination'] = self.cached['chosen_location']
+            if intent == Intent.select_item:
+                self._set_state(State.SELECT_LOCATION)
+            elif intent == Intent.path:
                 self._set_state(State.FIND_ROUTE)
             else:
                 self._set_state(State.START)
-        
+
         elif self.fsm == State.REQUEST_SCHEDULE:
             self.tracker.reset_state()
             self.tracker.update_state(entities_list)
@@ -150,7 +163,7 @@ class DialogManager:
                 self._set_state(State.REQUESTING_SCHEDULE)
             else:
                 self._set_state(State.ASK_DATE_TIME)
-        
+
         elif self.fsm == State.ASK_DATE_TIME:
             self.tracker.update_state(entities_list)
             current_state = self.tracker.get_state()
@@ -158,7 +171,7 @@ class DialogManager:
                 self._set_state(State.REQUESTING_SCHEDULE)
             else:
                 return 'ask_date_time', {}
-        
+
         elif self.fsm == State.REQUESTING_SCHEDULE:
             items = self.execute(intent, entities, **kwargs)
             current_state = self.tracker.get_state()
@@ -178,7 +191,7 @@ class DialogManager:
                 self._set_state(State.FIND_LOCATION)
             else:
                 self._set_state(State.ASK_PLACE)
-        
+
         elif self.fsm == State.ASK_PLACE:
             self.tracker.update_state(entities_list)
             current_state = self.tracker.get_state()

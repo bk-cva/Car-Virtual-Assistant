@@ -21,6 +21,10 @@ NORMALIZE_ENTITY_DICT = {
         0: ['nay', 'hôm nay', 'ngày hôm nay'],
         1: ['mai', 'ngày mai', 'hôm sau', 'ngày hôm sau'],
         2: ['mốt', 'ngày mốt'],
+    },
+    'info_type': {
+        'khoảng cách': ['bao xa'],
+        'thời gian': ['bao lâu'],
     }
 }
 
@@ -92,6 +96,7 @@ def normalize(entity: Entity) -> NormalEntity:
                     result.value = today.replace(month=(today.month)%12+1, day=date_value)
                 else:
                     result.value = date(today.year, today.month, date_value)
+
     elif result.name == 'time':
         time_value = re.sub('giờ ', '', result.value.lower())
         # full: ex. '5 giờ kém chiều'
