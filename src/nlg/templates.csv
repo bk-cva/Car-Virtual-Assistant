@@ -5,7 +5,8 @@ respond_location_single|Tôi tìm được 1 địa điểm là {title}.
 respond_location_street|Nó nằm trên đường {street}.
 respond_location_district|Nó nằm ở {district}.
 respond_location_distance|Cách đây {distance} mét.
-respond_address|Vị trí cần tìm đang hiển thị trên bản đồ.
+respond_address_location|Vị trí cần tìm đang hiển thị trên bản đồ.
+respond_address_path|Đường đến vị trí cần tìm đang hiển thị trên bản đồ.
 show_current_location|Bạn đang ở gần {houseNumber} đường {street} {district} {city}.
 show_current_location_alt|Không tìm được địa chỉ nào quanh đây. Vị trí hiện tại của bạn đang được hiển thị.
 select_location|Tôi tìm được {num_locs} địa điểm liên quan.

@@ -76,7 +76,15 @@ class DialogManager:
             items = self.execute(intent, entities, **kwargs)
             if len(items) > 0:
                 self._set_state(State.START)
-                return 'respond_address', vars(items[0])
+                item = items[0]
+                if self.main_intent == Intent.location:
+                    return 'respond_address_location', vars(item)
+                else:
+                    routes = self.here_api.calculate_route((kwargs.get('latitude'),
+                                                            kwargs.get('longitude')),
+                                                           (item.latitude,
+                                                            item.longitude))
+                    return 'respond_address_path', vars(item)
             else:
                 self._set_state(State.NO_LOCATION)
         
@@ -199,8 +207,10 @@ class DialogManager:
         elif self.fsm == State.ROUTE:
             self.tracker.update_state(entities_list)
             current_state = self.tracker.get_state()
-            if 'place' in current_state:
+            if 'place' in current_state or 'activity' in current_state:
                 self._set_state(State.FIND_LOCATION)
+            elif 'street' in current_state:
+                self._set_state(State.FIND_ADDRESS)
             else:
                 self._set_state(State.ASK_PLACE)
 
