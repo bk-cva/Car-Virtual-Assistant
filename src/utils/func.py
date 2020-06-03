@@ -51,4 +51,4 @@ def match_string(target: str, value: str) -> bool:
 def datetime_range_to_string(d1: datetime, d2: datetime) -> str:
     if d1.time() == datetime.min.time() and d2.time() == datetime.min.time():
         return d1.strftime('ngày %d tháng %m')
-    return 'Thời gian đó'
+    return None

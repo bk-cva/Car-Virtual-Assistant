@@ -3,6 +3,8 @@ import logging
 import os.path
 from typing import Dict
 
+from src.utils import datetime_range_to_string
+
 
 logger = logging.getLogger(__name__)
 
@@ -68,13 +70,25 @@ class NLG:
             response = 'Không tìm thấy địa điểm.'.format(**substitutes)
 
         elif action == 'respond_request_schedule':
-            response = 'Có {num_events} sự kiện sẽ diễn ra vào {datetime}.'.format(**substitutes)
+            response = 'Có {} sự kiện'.format(
+                len(substitutes['events']))
+            date_str = datetime_range_to_string(substitutes['time_min'], substitutes['time_max'])
+            if date_str:
+                response += ' trong ' + date_str
+            response += '.'
 
         elif action == 'no_request_schedule':
-            response = '{datetime} không có sự kiện.'.format(**substitutes)
+            response = 'Không có sự kiện'.format(**substitutes)
+            date_str = datetime_range_to_string(substitutes['time_min'], substitutes['time_max'])
+            if date_str:
+                response += ' trong ' + date_str
+            response += '.'
 
-        elif action == 'ask_date_time':
-            response = 'Trong thời gian nào?'.format(**substitutes)
+        elif action == 'ask_time':
+            response = 'Trong thời gian nào?'
+
+        elif action == 'ask_event':
+            response = 'Bạn muốn đặt tên sự kiện này là gì?'
 
         elif action == 'respond_route':
             response = 'Tôi đã tìm được đường đến {title}.'.format(**substitutes)

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import List, Dict, Tuple
 
 from .dialog_state_tracker import FeaturizedTracker
@@ -8,7 +8,7 @@ from .state import State
 from .normalization import NormalEntity
 from src.nlu.intents.constants import Intent
 from src.map.here import HereSDK
-from src.utils import match_string, datetime_range_to_string
+from src.utils import match_string
 from src.db.schedule import ScheduleSDK
 
 
@@ -40,19 +40,17 @@ class DialogManager:
         if self.fsm == State.START:
             if intent == Intent.location:
                 self._set_state(State.LOCATION)
-                self._set_main_intent(Intent.location)
-
-            elif intent == Intent.request_schedule:
-                self._set_state(State.REQUEST_SCHEDULE)
-                self._set_main_intent(Intent.request_schedule)
-            
             elif intent == Intent.path:
                 self._set_state(State.ROUTE)
-                self._set_main_intent(Intent.path)
-            
+            elif intent == Intent.request_schedule:
+                self._set_state(State.REQUEST_SCHEDULE)
+            elif intent == Intent.create_schedule:
+                self._set_state(State.CREATE_SCHEDULE)            
             else:
                 return 'intent_not_found', {}
-        
+
+            self._set_main_intent(intent)
+
         elif self.fsm == State.LOCATION:
             self.tracker.reset_state()
             self.tracker.update_state(entities_list)
@@ -173,35 +171,6 @@ class DialogManager:
             else:
                 self._set_state(State.START)
 
-        elif self.fsm == State.REQUEST_SCHEDULE:
-            self.tracker.reset_state()
-            self.tracker.update_state(entities_list)
-            current_state = self.tracker.get_state()
-            if 'time' in current_state or 'date' in current_state:
-                self._set_state(State.REQUESTING_SCHEDULE)
-            else:
-                self._set_state(State.ASK_DATE_TIME)
-
-        elif self.fsm == State.ASK_DATE_TIME:
-            self.tracker.update_state(entities_list)
-            current_state = self.tracker.get_state()
-            if 'time' in current_state or 'date' in current_state:
-                self._set_state(State.REQUESTING_SCHEDULE)
-            else:
-                return 'ask_date_time', {}
-
-        elif self.fsm == State.REQUESTING_SCHEDULE:
-            items = self.execute(intent, entities, **kwargs)
-            current_state = self.tracker.get_state()
-            self._set_state(State.START)
-            if len(items) > 0:
-                return 'respond_request_schedule', {'datetime': datetime_range_to_string(self.cached['request_schedule_time_min'], self.cached['request_schedule_time_max']),
-                                                    'events': items,
-                                                    'num_events': len(items),
-                                                    'list': ', '.join(map(lambda x: x['summary'], items))}
-            else:
-                return 'no_request_schedule', {'datetime': datetime_range_to_string(self.cached['request_schedule_time_min'], self.cached['request_schedule_time_max'])}
-
         elif self.fsm == State.ROUTE:
             self.tracker.update_state(entities_list)
             current_state = self.tracker.get_state()
@@ -229,6 +198,70 @@ class DialogManager:
                                                    (destination.latitude,
                                                     destination.longitude))
             return 'respond_route', {'routes': routes, 'title': destination.title}
+
+        elif self.fsm == State.REQUEST_SCHEDULE:
+            self.tracker.reset_state()
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
+            # Default is today
+            time_min = datetime.combine(date.today(), datetime.min.time())
+            time_max = time_min + timedelta(1)
+            if 'date' in current_state:
+                time_min = datetime.combine(
+                    current_state['date'], datetime.min.time())
+            if 'time' in current_state:
+                time_from, time_to = current_state['time']
+                time_max = time_min + timedelta(hours=time_to.hour,
+                                                minutes=time_to.minute)
+                time_min = time_min + timedelta(hours=time_from.hour,
+                                                minutes=time_from.minute)
+            else:
+                time_max = time_min + timedelta(1)
+            items = self.schedule_api.request_schedule(
+                time_min=time_min, time_max=time_max)
+            self._set_state(State.START)
+            if len(items) > 0:
+                return 'respond_request_schedule', {
+                    'events': items,
+                    'time_min': time_min,
+                    'time_max': time_max}
+            else:
+                return 'no_request_schedule', {
+                    'time_min': time_min,
+                    'time_max': time_max}
+
+        elif self.fsm == State.CREATE_SCHEDULE:
+            self.tracker.reset_state()
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
+            if 'event' in current_state or 'activity' in current_state:
+                if 'time' in current_state:
+                    self._set_state(State.CREATING_SCHEDULE)
+                else:
+                    self._set_state(State.ASK_TIME)
+                    return 'ask_time', {}
+            else:
+                self._set_state(State.ASK_EVENT)
+                return 'ask_event', {}
+
+        elif self.fsm == State.ASK_EVENT:
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
+            if 'event' in current_state or 'activity' in current_state:
+                self._set_state(State.ASK_TIME)
+            else:
+                self._set_state(State.START)
+
+        elif self.fsm == State.ASK_TIME:
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
+            if 'time' in current_state:
+                self._set_state(State.CREATING_SCHEDULE)
+            else:
+                self._set_state(State.START)
+        
+        elif self.fsm == State.CREATING_SCHEDULE:
+            pass
 
         else:
             raise Exception('Unexpected state {}'.format(self.fsm))
@@ -264,19 +297,6 @@ class DialogManager:
             latitude, longitude = kwargs.get(
                 'latitude'), kwargs.get('longitude')
             items = self.here_api.reverse_geocode(latitude, longitude)
-            return items
-        
-        elif self.fsm == State.REQUESTING_SCHEDULE:
-            timeMin = datetime.now()
-            timeMax = datetime.now() + timedelta(1)
-            if 'date' in current_state:
-                minDate = datetime.combine(current_state['date'], datetime.min.time())
-                maxDate = minDate + timedelta(1)
-                self.cached['request_schedule_time_min'] = minDate
-                self.cached['request_schedule_time_max'] = maxDate
-                timeMin = minDate.astimezone().replace(microsecond=0).isoformat()
-                timeMax = maxDate.astimezone().replace(microsecond=0).isoformat()
-            items = self.schedule_api.request_schedule(timeMin=timeMin, timeMax=timeMax)
             return items
 
     def _set_state(self, state: State):
