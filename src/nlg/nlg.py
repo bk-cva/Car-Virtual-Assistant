@@ -3,8 +3,6 @@ import logging
 import os.path
 from typing import Dict
 
-from src.utils import datetime_range_to_string
-
 
 logger = logging.getLogger(__name__)
 
@@ -72,14 +70,14 @@ class NLG:
         elif action == 'respond_request_schedule':
             response = 'Có {} sự kiện'.format(
                 len(substitutes['events']))
-            date_str = datetime_range_to_string(substitutes['time_min'], substitutes['time_max'])
+            date_str = substitutes.get('date_str')
             if date_str:
                 response += ' trong ' + date_str
             response += '.'
 
         elif action == 'no_request_schedule':
             response = 'Không có sự kiện'.format(**substitutes)
-            date_str = datetime_range_to_string(substitutes['time_min'], substitutes['time_max'])
+            date_str = substitutes.get('date_str')
             if date_str:
                 response += ' trong ' + date_str
             response += '.'

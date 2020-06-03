@@ -8,7 +8,7 @@ from .state import State
 from .normalization import NormalEntity
 from src.nlu.intents.constants import Intent
 from src.map.here import HereSDK
-from src.utils import match_string
+from src.utils import match_string, datetime_range_to_string
 from src.db.schedule import ScheduleSDK
 
 
@@ -197,7 +197,10 @@ class DialogManager:
                                                     kwargs.get('longitude')),
                                                    (destination.latitude,
                                                     destination.longitude))
-            return 'respond_route', {'routes': routes, 'title': destination.title}
+            return 'respond_route', {
+                'routes': routes,
+                'locations': [destination],
+                'title': destination.title}
 
         elif self.fsm == State.REQUEST_SCHEDULE:
             self.tracker.reset_state()
@@ -223,12 +226,10 @@ class DialogManager:
             if len(items) > 0:
                 return 'respond_request_schedule', {
                     'events': items,
-                    'time_min': time_min,
-                    'time_max': time_max}
+                    'date_str': datetime_range_to_string(time_min, time_max)}
             else:
                 return 'no_request_schedule', {
-                    'time_min': time_min,
-                    'time_max': time_max}
+                    'date_str': datetime_range_to_string(time_min, time_max)}
 
         elif self.fsm == State.CREATE_SCHEDULE:
             self.tracker.reset_state()
