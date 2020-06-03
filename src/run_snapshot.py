@@ -5,7 +5,7 @@ from unittest.mock import patch
 from src.cva import CVA
 
 
-fh = logging.FileHandler('debug.log')
+fh = logging.FileHandler('debug-snapshot.log')
 fh.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
 fh.setFormatter(formatter)
