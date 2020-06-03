@@ -103,11 +103,11 @@ def normalize(entity: Entity) -> NormalEntity:
     elif result.name == 'time':
         time_value = re.sub('giờ ', '', result.value.lower())
         # full: ex. '5 giờ kém chiều'
-        full_time = re.match(r'(?P<t>\d+) (?P<a>\w+) (?P<p>\w+)', time_value)
+        full_time = re.match(r'(?P<t>\d+) (?P<a>\D+) (?P<p>\D+)', time_value)
         # period: ex. '5 giờ chiều', '5 giờ kém'
         after_time = re.match(r'(?P<t>\d+) (?P<v>\w+)', time_value)
         # only period: ex. 'chiều', 'sáng'
-        period_time = re.match(r'(?P<p>D+)', time_value)
+        period_time = re.match(r'(?P<p>\D+)', time_value)
         # full: ex. '15:30 chiều'
         full_oclock_time = re.match(r'((?P<h1>\d+):(?P<m>\d+)|(?P<h2>\d+)) (?P<p>\w+)', time_value)
         # oclock: ex. '15:30'
