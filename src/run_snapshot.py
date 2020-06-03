@@ -9,7 +9,7 @@ fh = logging.FileHandler('debug-snapshot.log')
 fh.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
 fh.setFormatter(formatter)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logger.addHandler(fh)
 
 mock_date_patcher = patch('src.dialog_manager.normalization.date')

@@ -9,7 +9,7 @@ from src.nlg import NLG
 from src.utils import call_nlu, NluException
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
