@@ -4,7 +4,8 @@ import gevent
 import logging
 from flask_sockets import Sockets
 from flask_cors import CORS
-from flask import Flask, jsonify, make_response, request as flask_request
+from flask import Flask, make_response, request as flask_request
+from flask.json import dumps
 from google.protobuf import json_format
 
 from src.proto import rest_api_pb2
@@ -15,7 +16,7 @@ fh = logging.FileHandler('debug.log')
 fh.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
 fh.setFormatter(formatter)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(fh)
 
@@ -106,10 +107,14 @@ def cva_handler():
         }))
     else:
         raise Exception('Unknown topic.')
-    return make_response(jsonify({
-        'status': 'ok',
-        **data
-    }), 200)
+
+    response = make_response(
+        dumps({
+            'status': 'ok',
+            **data}, default=lambda x: x.__dict__),
+        200)
+    response.headers['Content-type'] = 'application/json; charset=utf-8'
+    return response
 
 
 @sockets.route('/')
