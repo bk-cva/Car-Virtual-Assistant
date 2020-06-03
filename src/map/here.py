@@ -43,30 +43,20 @@ class HereSDK:
             logger.exception(str(e))
             return []
 
-    def geocode(self, housenumber: str, street: str, district: str = None,
+    def geocode(self, at: Tuple[float, float], housenumber: str, street: str, district: str = None,
                 city: str = 'Hồ Chí Minh', country: str = 'VNM'):
         try:
-            response = requests.get('https://geocoder.ls.hereapi.com/6.2/geocode.json', params={
+            response = requests.get('https://geocode.search.hereapi.com/v1/geocode', params={
                 'apiKey': self.api_key,
-                'housenumber': housenumber,
-                'street': street,
-                'district': district,
-                'city': city,
-                'country': country,
+                'at': ','.join(map(str, at)),
+                'qq': 'houseNumber={};street={};district={};city={}'.format(housenumber, street, district, city),
+                'in': 'countryCode:{}'.format(country),
             })
             response.raise_for_status()
-            view = response.json()['Response']['View']
-            if len(view) > 0:
-                results = []
-                for res in view[0]['Result']:
-                    results.append(Place(
-                        title=res['Location']['Address']['Label'],
-                        address=res['Location']['Address']['Label'],
-                        latitude=res['Location']['DisplayPosition']['Latitude'],
-                        longitude=res['Location']['DisplayPosition']['Longitude']))
-                return results
-            else:
-                return []
+            results = []
+            for item in response.json()['items']:
+                results.append(HerePlace(item))
+            return results
         except HTTPError as e:
             logger.exception(str(e))
             return []

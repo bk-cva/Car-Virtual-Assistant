@@ -40,10 +40,20 @@ class NLG:
             response = 'Cách đây {distance} mét.'.format(**substitutes)
 
         elif action == 'respond_address_location':
-            response = 'Vị trí cần tìm đang hiển thị trên bản đồ.'.format(**substitutes)
+            address = []
+            if 'houseNumber' in substitutes:
+                address.append('số {}'.format(substitutes['houseNumber']))
+            if 'street' in substitutes:
+                address.append('đường {}'.format(substitutes['street']))
+            response = 'Vị trí của {} đang hiển thị trên bản đồ.'.format(' '.join(address))
 
         elif action == 'respond_address_path':
-            response = 'Đường đến vị trí cần tìm đang hiển thị trên bản đồ.'.format(**substitutes)
+            address = []
+            if 'houseNumber' in substitutes:
+                address.append('số {}'.format(substitutes['houseNumber']))
+            if 'street' in substitutes:
+                address.append('đường {}'.format(substitutes['street']))
+            response = 'Đường đến {} đang hiển thị trên bản đồ.'.format(' '.join(address))
 
         elif action == 'show_current_location':
             response = 'Bạn đang ở gần {houseNumber} đường {street} {district} {city}.'.format(**substitutes)

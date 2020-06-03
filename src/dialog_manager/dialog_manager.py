@@ -250,12 +250,14 @@ class DialogManager:
             return items
 
         elif self.fsm == State.FIND_ADDRESS:
+            latitude, longitude = kwargs.get(
+                'latitude'), kwargs.get('longitude')
             query = {'street': current_state.get('street')}
             if 'address' in current_state:
                 query['housenumber'] = current_state.get('address')
             if 'district' in current_state:
                 query['district'] = current_state.get('district')
-            items = self.here_api.geocode(**query)
+            items = self.here_api.geocode((latitude, longitude), **query)
             return items
         
         elif self.fsm == State.FIND_CURRENT:
