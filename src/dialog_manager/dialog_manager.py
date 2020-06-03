@@ -115,9 +115,7 @@ class DialogManager:
                 place_property = self.tracker.get_state('place_property')
                 if place_property is not None:
                     if place_property == 'gần nhất':
-                        print([(item.title, item.distance) for item in items])
                         index = min(enumerate(items), key=lambda x: x[1].distance)[0]
-                        print(index)
                         self.tracker.update_state([('number', index)])
                         if self.main_intent == Intent.location:
                             self._set_state(State.RETURN_LOCATION)
