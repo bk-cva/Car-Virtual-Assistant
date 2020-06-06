@@ -37,3 +37,8 @@ tạo cuộc họp trong lịch
 
 đi họp lúc 5 giờ sáng mai
 trong 1 giờ
+
+nhắc tôi đi chợ lúc 9 giờ sáng mai.
+
+nhắc tôi uống nước
+8 giờ tối nay.

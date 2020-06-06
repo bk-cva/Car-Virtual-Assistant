@@ -45,7 +45,9 @@ class DialogManager:
             elif intent == Intent.request_schedule:
                 self._set_state(State.REQUEST_SCHEDULE)
             elif intent == Intent.create_schedule:
-                self._set_state(State.CREATE_SCHEDULE)            
+                self._set_state(State.CREATE_SCHEDULE)       
+            elif intent == Intent.remind:
+                self._set_state(State.CREATE_SCHEDULE)
             else:
                 return 'intent_not_found', {}
 
@@ -238,8 +240,11 @@ class DialogManager:
             current_state = self.tracker.get_state()
             if 'event' in current_state or 'activity' in current_state:
                 if 'time' in current_state:
-                    self._set_state(State.ASK_DURATION)
-                    return 'ask_duration', {}
+                    if self.main_intent == Intent.create_schedule:
+                        self._set_state(State.ASK_DURATION)
+                        return 'ask_duration', {}
+                    self._set_state(State.CREATING_SCHEDULE)
+                    return None
                 self._set_state(State.ASK_TIME)
                 return 'ask_time', {}
             self._set_state(State.ASK_EVENT)
@@ -250,8 +255,11 @@ class DialogManager:
             current_state = self.tracker.get_state()
             if 'event' in current_state or 'activity' in current_state:
                 if 'time' in current_state:
-                    self._set_state(State.ASK_DURATION)
-                    return 'ask_duration', {}
+                    if self.main_intent == Intent.create_schedule:
+                        self._set_state(State.ASK_DURATION)
+                        return 'ask_duration', {}
+                    self._set_state(State.CREATING_SCHEDULE)
+                    return None
                 self._set_state(State.ASK_TIME)
                 return 'ask_time', {}
             else:
@@ -261,17 +269,20 @@ class DialogManager:
             self.tracker.update_state(entities_list)
             current_state = self.tracker.get_state()
             if 'time' in current_state:
-                self._set_state(State.ASK_DURATION)
-                return 'ask_duration', {}
+                if self.main_intent == Intent.create_schedule:
+                    self._set_state(State.ASK_DURATION)
+                    return 'ask_duration', {}
+                self._set_state(State.CREATING_SCHEDULE)
+                return None
             else:
                 self._set_state(State.START)
 
         elif self.fsm == State.ASK_DURATION:
-            time_entities = next(e for e in entities_list if e[0] == 'time')
-            if len(time_entities) > 0:
+            try:
+                time_entities = next(e for e in entities_list if e[0] == 'time')
                 self.tracker.update_state([('duration', time_entities[1])])
                 self._set_state(State.CREATING_SCHEDULE)
-            else:
+            except StopIteration:
                 self._set_state(State.START)
 
         elif self.fsm == State.CREATING_SCHEDULE:
@@ -284,7 +295,8 @@ class DialogManager:
             time_from = normalize_time(current_state['time'])
             start_time = start_time + timedelta(hours=time_from.hour,
                                                 minutes=time_from.minute)
-            end_time = None
+            # If main_intent is remind, set default end time to 5 minutes later.
+            end_time = start_time + timedelta(minutes=5)
             if 'duration' in current_state:
                 duration = normalize_duration(current_state['duration'])
                 end_time = start_time + duration
@@ -294,10 +306,12 @@ class DialogManager:
                     summary=summary,
                     start_time=start_time,
                     end_time=end_time)
+                self._set_state(State.START)
                 return 'respond_create_schedule', {
                     'summary': summary,
                     'time_str': datetime_to_time_string(start_time)}
             except Exception:
+                self._set_state(State.START)
                 return 'respond_create_schedule_alt', {}
         else:
             raise Exception('Unexpected state {}'.format(self.fsm))
