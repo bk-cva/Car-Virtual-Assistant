@@ -5,7 +5,7 @@ from typing import List, Dict, Tuple
 from .dialog_state_tracker import FeaturizedTracker
 from .response_selector import ResponseSelector
 from .state import State
-from .normalization import NormalEntity
+from .normalization import NormalEntity, normalize_date, normalize_time_range, normalize_time, normalize_duration
 from src.nlu.intents.constants import Intent
 from src.map.here import HereSDK
 from src.utils import match_string, datetime_range_to_string, datetime_to_time_string
@@ -210,10 +210,11 @@ class DialogManager:
             time_min = datetime.combine(date.today(), datetime.min.time())
             time_max = time_min + timedelta(1)
             if 'date' in current_state:
-                time_min = datetime.combine(
-                    current_state['date'], datetime.min.time())
+                time_min = datetime.combine(normalize_date(
+                    current_state['date']), datetime.min.time())
             if 'time' in current_state:
-                time_from, time_to = current_state['time']
+                time_from, time_to = normalize_time_range(
+                    current_state['time'])
                 time_max = time_min + timedelta(hours=time_to.hour,
                                                 minutes=time_to.minute)
                 time_min = time_min + timedelta(hours=time_from.hour,
@@ -279,13 +280,13 @@ class DialogManager:
             start_time = datetime.combine(date.today(), datetime.min.time())
             if 'date' in current_state:
                 start_time = datetime.combine(
-                    current_state['date'], datetime.min.time())
-            time_from = current_state['time']
+                    normalize_date(current_state['date']), datetime.min.time())
+            time_from = normalize_time(current_state['time'])
             start_time = start_time + timedelta(hours=time_from.hour,
                                                 minutes=time_from.minute)
             end_time = None
             if 'duration' in current_state:
-                duration = current_state['duration']
+                duration = normalize_duration(current_state['duration'])
                 end_time = start_time + timedelta(hours=duration.hour,
                                                   minutes=duration.minute)
             summary = current_state.get('event', current_state.get('activity'))

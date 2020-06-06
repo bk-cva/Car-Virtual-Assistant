@@ -24,3 +24,16 @@ lịch ngày mai tôi có việc gì không?
 lịch ngày mốt tôi có việc gì không?
 
 chiều nay có họp không?
+
+tạo cuộc họp lúc 5 giờ
+2 giờ
+
+đặt buổi hẹn lúc 5 giờ ngày 31
+1 giờ
+
+tạo cuộc họp trong lịch
+8 giờ
+5 giờ
+
+đi họp lúc 5 giờ sáng mai
+trong 1 giờ

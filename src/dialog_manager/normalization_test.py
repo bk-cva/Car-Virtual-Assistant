@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 from datetime import date
 
-from .normalization import normalize, NormalizationError
+from .normalization import normalize, normalize_date, NormalizationError
 from src.proto.rest_api_pb2 import Entity
 
 
@@ -15,78 +15,47 @@ class TestNormalizeDate(unittest.TestCase):
         self.mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
 
     def test_date(self):
-        entity = Entity()
-        entity.name = 'date'
-        entity.value = 'thứ 5'
-
-        self.assertEqual(normalize(entity).value, date(2020, 1, 2))
+        entity = 'thứ 5'
+        self.assertEqual(normalize_date(entity), date(2020, 1, 2))
 
     def test_date_2(self):
-        entity = Entity()
-        entity.name = 'date'
-        entity.value = 'chủ nhật'
-
-        self.assertEqual(normalize(entity).value, date(2020, 1, 5))
+        entity = 'chủ nhật'
+        self.assertEqual(normalize_date(entity), date(2020, 1, 5))
 
     def test_date_3(self):
-        entity = Entity()
-        entity.name = 'date'
-        entity.value = 'thứ 2'
-
-        self.assertEqual(normalize(entity).value, date(2020, 1, 6))
+        entity = 'thứ 2'
+        self.assertEqual(normalize_date(entity), date(2020, 1, 6))
 
     def test_date_4(self):
-        entity = Entity()
-        entity.name = 'date'
-        entity.value = 'hôm nay'
-
-        self.assertEqual(normalize(entity).value, date(2020, 1, 1))
+        entity = 'hôm nay'
+        self.assertEqual(normalize_date(entity), date(2020, 1, 1))
 
     def test_date_5(self):
-        entity = Entity()
-        entity.name = 'date'
-        entity.value = 'mai'
-
-        self.assertEqual(normalize(entity).value, date(2020, 1, 2))
+        entity = 'mai'
+        self.assertEqual(normalize_date(entity), date(2020, 1, 2))
 
     def test_date_6(self):
-        entity = Entity()
-        entity.name = 'date'
-        entity.value = 'mốt'
-
-        self.assertEqual(normalize(entity).value, date(2020, 1, 3))
+        entity = 'mốt'
+        self.assertEqual(normalize_date(entity), date(2020, 1, 3))
 
     def test_date_7(self):
-        entity = Entity()
-        entity.name = 'date'
-        entity.value = 'ngày 10'
-
-        self.assertEqual(normalize(entity).value, date(2020, 1, 10))
+        entity = 'ngày 10'
+        self.assertEqual(normalize_date(entity), date(2020, 1, 10))
 
     def test_date_error(self):
-        entity = Entity()
-        entity.name = 'date'
-        entity.value = 'thứ 9'
-
+        entity = 'thứ 9'
         with self.assertRaises(NormalizationError):
-            normalize(entity)
+            normalize_date(entity)
 
     def test_date_error_2(self):
-        entity = Entity()
-        entity.name = 'date'
-        entity.value = 'thứ 1'
-
+        entity = 'thứ 1'
         with self.assertRaises(NormalizationError):
-            normalize(entity)
+            normalize_date(entity)
 
     def test_date_error_3(self):
-        entity = Entity()
-        entity.name = 'date'
-        entity.value = 'thứ một'
-
+        entity = 'thứ một'
         with self.assertRaises(NormalizationError):
-            normalize(entity)
-
+            normalize_date(entity)
 
     def tearDown(self):
         self.mock_date_patcher.stop()
@@ -98,11 +67,11 @@ class TestNormalizeNumber(unittest.TestCase):
         entity.name = 'number'
         entity.value = 'đầu tiên'
 
-        self.assertEqual(normalize(entity).value, 0)
+        self.assertEqual(normalize(None, entity).value, 0)
 
     def test_result_2(self):
         entity = Entity()
         entity.name = 'number'
         entity.value = '2'
 
-        self.assertEqual(normalize(entity).value, 1)
+        self.assertEqual(normalize(None, entity).value, 1)
