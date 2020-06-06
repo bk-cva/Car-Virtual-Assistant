@@ -88,6 +88,15 @@ class NLG:
         elif action == 'ask_event':
             response = 'Bạn muốn đặt tên sự kiện này là gì?'
 
+        elif action == 'ask_duration':
+            response = 'Trong bao lâu?'
+
+        elif action == 'respond_create_schedule':
+            response = 'Xong. {summary} lúc {time_str} đã được tạo.'.format(**substitutes)
+
+        elif action == 'respond_create_schedule_alt':
+            response = 'Có vẻ như việc tạo lịch không thành công. Hãy thử lại sau nhé!'
+
         elif action == 'respond_route':
             response = 'Tôi đã tìm được đường đến {title}.'.format(**substitutes)
 

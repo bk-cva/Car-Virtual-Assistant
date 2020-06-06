@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 import requests
-from datetime import datetime
+from datetime import datetime, date
 from fuzzywuzzy import fuzz
 
 from ..common.config_manager import ConfigManager
@@ -10,6 +10,7 @@ from src.proto.rest_api_pb2 import Entity
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def call_nlu(text: str):
@@ -52,3 +53,24 @@ def datetime_range_to_string(d1: datetime, d2: datetime) -> str:
     if d1.time() == datetime.min.time() and d2.time() == datetime.min.time():
         return d1.strftime('ngày %d tháng %m')
     return None
+
+
+def datetime_to_time_string(d: datetime) -> str:
+    result = ''
+    if d.minute == 0:
+        result += d.strftime('%H giờ')
+    else:
+        if d.minute == 30:
+            result += d.strftime('%H giờ rưỡi')
+        else:
+            result += d.strftime('%H giờ %M phút')
+    
+    if d.date() == date.today():
+        result += ' hôm nay'
+    else:
+        result += ' ngày {}'.format(d.date().day)
+
+    if d.date().month != date.today().month:
+        result += ' tháng {}'.format(d.date().month)
+
+    return result

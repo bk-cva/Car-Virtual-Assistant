@@ -28,7 +28,7 @@ class CVA:
         except NluException:
             return self.nlg(None, None), None
 
-        entities = list(map(normalize, entities))
+        entities = list(map(lambda e: normalize(intent, e), entities))
 
         response = None
         while response is None:

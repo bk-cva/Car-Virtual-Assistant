@@ -8,7 +8,7 @@ from .state import State
 from .normalization import NormalEntity
 from src.nlu.intents.constants import Intent
 from src.map.here import HereSDK
-from src.utils import match_string, datetime_range_to_string
+from src.utils import match_string, datetime_range_to_string, datetime_to_time_string
 from src.db.schedule import ScheduleSDK
 
 
@@ -25,7 +25,7 @@ class DialogManager:
         self.cached = {}
         self.tracker = FeaturizedTracker(['place', 'place_property', 'route_property', 'info_type',
                                           'address', 'street', 'ward', 'district',
-                                          'activity', 'event', 'number', 'date', 'time'])
+                                          'activity', 'event', 'number', 'date', 'time', 'duration'])
         self.selector = selector
 
     def reset_state(self):
@@ -237,19 +237,22 @@ class DialogManager:
             current_state = self.tracker.get_state()
             if 'event' in current_state or 'activity' in current_state:
                 if 'time' in current_state:
-                    self._set_state(State.CREATING_SCHEDULE)
-                else:
-                    self._set_state(State.ASK_TIME)
-                    return 'ask_time', {}
-            else:
-                self._set_state(State.ASK_EVENT)
-                return 'ask_event', {}
+                    self._set_state(State.ASK_DURATION)
+                    return 'ask_duration', {}
+                self._set_state(State.ASK_TIME)
+                return 'ask_time', {}
+            self._set_state(State.ASK_EVENT)
+            return 'ask_event', {}
 
         elif self.fsm == State.ASK_EVENT:
             self.tracker.update_state(entities_list)
             current_state = self.tracker.get_state()
             if 'event' in current_state or 'activity' in current_state:
+                if 'time' in current_state:
+                    self._set_state(State.ASK_DURATION)
+                    return 'ask_duration', {}
                 self._set_state(State.ASK_TIME)
+                return 'ask_time', {}
             else:
                 self._set_state(State.START)
 
@@ -257,13 +260,45 @@ class DialogManager:
             self.tracker.update_state(entities_list)
             current_state = self.tracker.get_state()
             if 'time' in current_state:
+                self._set_state(State.ASK_DURATION)
+                return 'ask_duration', {}
+            else:
+                self._set_state(State.START)
+
+        elif self.fsm == State.ASK_DURATION:
+            time_entities = next(e for e in entities_list if e[0] == 'time')
+            if len(time_entities) > 0:
+                self.tracker.update_state([('duration', time_entities[1])])
                 self._set_state(State.CREATING_SCHEDULE)
             else:
                 self._set_state(State.START)
-        
-        elif self.fsm == State.CREATING_SCHEDULE:
-            pass
 
+        elif self.fsm == State.CREATING_SCHEDULE:
+            current_state = self.tracker.get_state()
+            # Default is today
+            start_time = datetime.combine(date.today(), datetime.min.time())
+            if 'date' in current_state:
+                start_time = datetime.combine(
+                    current_state['date'], datetime.min.time())
+            time_from = current_state['time']
+            start_time = start_time + timedelta(hours=time_from.hour,
+                                                minutes=time_from.minute)
+            end_time = None
+            if 'duration' in current_state:
+                duration = current_state['duration']
+                end_time = start_time + timedelta(hours=duration.hour,
+                                                  minutes=duration.minute)
+            summary = current_state.get('event', current_state.get('activity'))
+            try:
+                self.schedule_api.create_schedule(
+                    summary=summary,
+                    start_time=start_time,
+                    end_time=end_time)
+                return 'respond_create_schedule', {
+                    'summary': summary,
+                    'time_str': datetime_to_time_string(start_time)}
+            except Exception:
+                return 'respond_create_schedule_alt', {}
         else:
             raise Exception('Unexpected state {}'.format(self.fsm))
 
