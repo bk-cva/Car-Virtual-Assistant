@@ -50,7 +50,19 @@ class ScheduleSDK:
             logger.info(json.dumps(payload))
             res = requests.post(self.url + '/calendar/event', json=payload)
             res.raise_for_status()
+            return res.json()
         except Exception as e:
             logger.exception(str(e))
             raise e
-    
+
+    def cancel_schedule(self,
+                        event_id: str):
+        try:
+            payload = {'calendarId': self.calendar_id,
+                       'eventId': event_id}
+            logger.info(json.dumps(payload))
+            res = requests.delete(self.url + '/calendar/event', json=payload)
+            res.raise_for_status()
+        except Exception as e:
+            logger.exception(str(e))
+            raise e
