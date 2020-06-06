@@ -209,8 +209,24 @@ def normalize_time_range(entity: str) -> Tuple[time, time]:
 
 def normalize_time(entity: str) -> time:
     time_value = re.sub(r'giờ\s?', '', entity.lower())
+    # full: ex. '15:30 chiều'
+    full_oclock_time = re.match(r'((?P<h1>\d+):(?P<m>\d+))|(?P<h2>\d+) (?P<p>\w+)', time_value)
     # oclock: ex. '15:30'
     oclock_time = re.match(r'((?P<h1>\d+):(?P<m>\d+))|(?P<h2>\d+)', time_value)
+
+    if full_oclock_time:
+        if full_oclock_time.group('h1'):
+            hours = int(full_oclock_time.group('h1'))
+            mins = int(full_oclock_time.group('m'))
+        else:
+            hours = int(full_oclock_time.group('h2'))
+            mins = 0
+        period = full_oclock_time.group('p')
+        if hours > 12:
+            return time(hours, mins)
+        if period == 'sáng' or (period == 'trưa' and hours >= 10):
+            return time(hours, mins)
+        return time((hours + 12)%24, mins)
 
     if oclock_time:
         if oclock_time.group('h1'):
@@ -228,7 +244,7 @@ def normalize_time(entity: str) -> time:
     raise NormalizationError('Unknown time value: {}'.format(entity))
 
 
-def normalize_duration(entity: str) -> time:
+def normalize_duration(entity: str) -> timedelta:
     time_value = re.sub(r'giờ\s?', '', entity.lower())
     # oclock: ex. '15:30'
     oclock_time = re.match(r'((?P<h1>\d+):(?P<m>\d+))|(?P<h2>\d+)', time_value)
@@ -240,7 +256,7 @@ def normalize_duration(entity: str) -> time:
             mins = int(oclock_time.group('m'))
         else:
             hours = int(oclock_time.group('h2'))
-        return time(hours, mins)
+        return timedelta(hours=hours, minutes=mins)
 
     raise NormalizationError('Unknown time value: {}'.format(entity))
 

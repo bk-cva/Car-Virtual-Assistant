@@ -287,8 +287,7 @@ class DialogManager:
             end_time = None
             if 'duration' in current_state:
                 duration = normalize_duration(current_state['duration'])
-                end_time = start_time + timedelta(hours=duration.hour,
-                                                  minutes=duration.minute)
+                end_time = start_time + duration
             summary = current_state.get('event', current_state.get('activity'))
             try:
                 self.schedule_api.create_schedule(
