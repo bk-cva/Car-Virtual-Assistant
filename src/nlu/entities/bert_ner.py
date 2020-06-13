@@ -245,17 +245,17 @@ class BertNER:
             self.mask: batch_features['mask'],
         })[0]
 
-        result = []
+        results = []
         for i, prediction in enumerate(predictions):
             token = batch_tokens[i]
             predict = self.id2label[prediction]
             if token != "[PAD]" and token != "[CLS]":
                 if token.startswith("##"):
-                    result[-1][0] += token[2:]
+                    results[-1][1] += token[2:]
                     continue
                 if predict == 'X':
-                    result[-1][0] += token
+                    results[-1][1] += token
                     continue
-                result.append([predict, token])
+                results.append([predict, token])
 
-        return result
+        return results
