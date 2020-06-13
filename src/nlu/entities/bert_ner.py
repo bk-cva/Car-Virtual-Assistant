@@ -256,6 +256,6 @@ class BertNER:
                 if predict == 'X':
                     result[-1][0] += token
                     continue
-                result.append([token, predict])
+                result.append([predict, token])
 
         return result

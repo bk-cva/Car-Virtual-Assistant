@@ -47,14 +47,32 @@ class NLU:
             return results
 
         bert_predictions = self.ner_model.predict(text)
-        bert_results = []
+        return self._convert_bert_predictions_to_entities_list(bert_predictions)
+
+    @staticmethod
+    def _convert_bert_predictions_to_entities_list(bert_predictions) -> List[Entity]:
+        entities_list = []
         for i, bert_predict in enumerate(bert_predictions):
-            if bert_predict[1] != 'O':
-                if bert_predict[1].startswith('B-'):
-                    entity = Entity()
-                    entity.name = bert_predict[1][2:]
-                    entity.value = bert_predict[0]
-                    bert_results.append(entity)
-                elif bert_predict[1].startswith('I-') and i > 0 and re.match(r'^[BI]-', bert_predictions[i - 1][1]):
-                    bert_results[-1].value += ' ' + bert_predict[0]
-        return bert_results
+            entity_name, entity_value = bert_predict
+            previous_entity_name = bert_predictions[i - 1][0]
+            if entity_name.startswith('B-') or \
+                (
+                    # In case of wrong predictions
+                    # For example: I-a I-a, O I-a, I-a I-b
+                    entity_name.startswith('I-') and \
+                    (
+                        i == 0 or \
+                        not re.match(r'^[BI]-', previous_entity_name) or
+                        (
+                            re.match(r'^[BI]-', previous_entity_name) and
+                            entity_name[2:] != previous_entity_name[2:]
+                        )
+                    )
+            ):
+                entity = Entity()
+                entity.name = entity_name[2:]
+                entity.value = entity_value
+                entities_list.append(entity)
+            elif entity_name.startswith('I-'):
+                entities_list[-1].value += ' ' + entity_value
+        return entities_list
