@@ -18,7 +18,7 @@ RUN wget --no-check-certificate -O entities_models.tar.gz \
     && tar -xzvf entities_models.tar.gz -C / \
     && rm entities_models.tar.gz
 RUN wget --no-check-certificate -O intents_models.tar.gz \
-    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212294\&authkey\=AGYoTi6QuIFCY1k \
+    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212392\&authkey\=AIkrK_nmev1g6BQ \
     && tar -xzvf intents_models.tar.gz -C / \
     && rm intents_models.tar.gz
 
