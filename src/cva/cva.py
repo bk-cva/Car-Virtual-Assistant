@@ -26,7 +26,7 @@ class CVA:
         try:
             intent, entities = call_nlu(utterance)
         except NluException:
-            return self.nlg(None, None), None
+            return self.nlg(None, {}), {}, None
 
         entities = list(map(lambda e: normalize(intent, e), entities))
 
