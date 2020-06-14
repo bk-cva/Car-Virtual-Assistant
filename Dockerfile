@@ -14,11 +14,11 @@ RUN pip install --no-cache -r requirements.txt
 
 
 RUN wget --no-check-certificate -O entities_models.tar.gz \
-    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212295\&authkey\=AKsz3xMJkeCZ1oU \
+    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212394\&authkey\=AKBvgUDQ-R-vdX4 \
     && tar -xzvf entities_models.tar.gz -C / \
     && rm entities_models.tar.gz
 RUN wget --no-check-certificate -O intents_models.tar.gz \
-    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212392\&authkey\=AIkrK_nmev1g6BQ \
+    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212393\&authkey\=AH5ViQNkNwy9BJ0 \
     && tar -xzvf intents_models.tar.gz -C / \
     && rm intents_models.tar.gz
 
