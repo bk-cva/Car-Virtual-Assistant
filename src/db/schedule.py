@@ -2,8 +2,10 @@ import json
 import logging
 import requests
 from datetime import datetime, timezone, timedelta
+from typing import List
 
 from ..common.config_manager import ConfigManager
+from .entities.event import Event
 
 
 logger = logging.getLogger(__name__)
@@ -16,10 +18,12 @@ def datetime2str(d: datetime) -> str:
 
 class ScheduleSDK:
     def __init__(self):
-        self.url = ConfigManager().get('CVA_DB_URL')
-        self.calendar_id = ConfigManager().get('CALENDAR_ID')
+        config = ConfigManager()
+        self.url = config.get('CVA_DB_URL')
+        self.calendar_id = config.get('CALENDAR_ID')
+        self.dry_run = config.get('SCHEDULE_API_DRY_RUN') == 'true'
         
-    def request_schedule(self, time_min: datetime, time_max: datetime, q: str = None):
+    def request_schedule(self, time_min: datetime, time_max: datetime, q: str = None) -> List[Event]:
         try:
             payload = {'calendarId': self.calendar_id,
                        'timeMin': datetime2str(time_min),
@@ -29,7 +33,8 @@ class ScheduleSDK:
             logger.debug(json.dumps(payload))
             res = requests.get(self.url + '/calendar/event/query', params=payload)
             res.raise_for_status()
-            return res.json()['items']
+            events = [Event(**item, _id=item['id']) for item in res.json()['items']]
+            return events
         except Exception as e:
             logger.exception(str(e))
             raise e
@@ -48,9 +53,10 @@ class ScheduleSDK:
             if location is not None:
                 payload['location'] = location
             logger.info(json.dumps(payload))
-            res = requests.post(self.url + '/calendar/event', json=payload)
-            res.raise_for_status()
-            return res.json()
+            if not self.dry_run:
+                res = requests.post(self.url + '/calendar/event', json=payload)
+                res.raise_for_status()
+                return res.json()
         except Exception as e:
             logger.exception(str(e))
             raise e
@@ -61,8 +67,10 @@ class ScheduleSDK:
             payload = {'calendarId': self.calendar_id,
                        'eventId': event_id}
             logger.info(json.dumps(payload))
-            res = requests.delete(self.url + '/calendar/event', json=payload)
-            res.raise_for_status()
+            if not self.dry_run:
+                res = requests.delete(self.url + '/calendar/event', json=payload)
+                res.raise_for_status()
+                return res.json()
         except Exception as e:
             logger.exception(str(e))
             raise e

@@ -373,7 +373,7 @@ class DialogManager:
         elif self.fsm == State.CALL_CANCEL_SCHEDULE:
             schedule = self.cached['schedules'][self.tracker.get_state('number', 0)]
             try:
-                self.schedule_api.cancel_schedule(schedule['id'])
+                self.schedule_api.cancel_schedule(schedule.id)
                 self._set_state(State.START)
                 return 'respond_cancel_schedule', {}
             except Exception:
