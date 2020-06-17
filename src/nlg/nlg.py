@@ -69,19 +69,19 @@ class NLG:
         elif action == 'no_location':
             response = 'Không tìm thấy địa điểm.'.format(**substitutes)
 
-        elif action == 'respond_request_schedule':
-            response = 'Có {} sự kiện'.format(
-                len(substitutes['events']))
-            date_str = substitutes.get('date_str')
-            if date_str:
-                response += ' trong ' + date_str
-            response += '.'
-
-        elif action == 'no_request_schedule':
-            response = 'Không có sự kiện'.format(**substitutes)
-            date_str = substitutes.get('date_str')
-            if date_str:
-                response += ' trong ' + date_str
+        elif action == 'respond_request_schedule' or action == 'no_request_schedule':
+            if action == 'respond_request_schedule':
+                response = 'Có {} sự kiện'.format(
+                    len(substitutes['events']))
+            else:
+                response = 'Không có sự kiện'.format(**substitutes)
+            
+            time_min = substitutes['time_min']
+            time_max = substitutes['time_max']
+            if time_min.time() == datetime.min.time() and time_max.time() == datetime.min.time():
+                response += ' trong ' + time_min.strftime('ngày %d tháng %m')
+            else:
+                response += ' từ ' + datetime_to_time_string(time_min) + ' đến ' + datetime_to_time_string(time_max)
             response += '.'
 
         elif action == 'ask_time':
@@ -94,7 +94,9 @@ class NLG:
             response = 'Trong bao lâu?'
 
         elif action == 'respond_create_schedule':
-            response = 'Xong. {summary} lúc {time_str} đã được tạo.'.format(**substitutes)
+            response = 'Xong. {} lúc {} đã được tạo.'.format(
+                substitutes['summary'],
+                datetime_to_time_string(substitutes['start_time']))
 
         elif action == 'respond_create_schedule_alt':
             response = 'Có vẻ như việc tạo lịch không thành công. Hãy thử lại sau nhé!'
@@ -114,8 +116,7 @@ class NLG:
         elif action == 'ask_cancel':
             response = 'Bạn có chắc muốn hủy sự kiện {} diễn ra vào lúc {} không?'.format(
                 substitutes['schedule'].summary,
-                datetime_to_time_string(substitutes['schedule'].start.dateTime)
-            )
+                datetime_to_time_string(substitutes['schedule'].start.dateTime))
 
         elif action == 'abort_cancel':
             response = 'OK, lịch của bạn vẫn được giữ nguyên.'

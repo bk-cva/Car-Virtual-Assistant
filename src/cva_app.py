@@ -7,6 +7,7 @@ from flask_cors import CORS
 from flask import Flask, make_response, request as flask_request
 from flask.json import dumps
 from google.protobuf import json_format
+from datetime import date, datetime
 
 from src.proto import rest_api_pb2
 from src.cva import CVA
@@ -100,7 +101,7 @@ def cva_handler():
             'action': action,
         }
 
-        redis.publish(REDIS_CHANNEL, json.dumps(data, default=lambda x: x.__dict__))
+        redis.publish(REDIS_CHANNEL, json.dumps(data, default=json_serial))
     elif topic == 'reset_cva':
         cva.reset()
         redis.publish(REDIS_CHANNEL, json.dumps({
@@ -112,7 +113,7 @@ def cva_handler():
     response = make_response(
         dumps({
             'status': 'ok',
-            **data}, default=lambda x: x.__dict__),
+            **data}, default=json_serial),
         200)
     response.headers['Content-type'] = 'application/json; charset=utf-8'
     return response
@@ -130,3 +131,10 @@ def __make_json_response_error(message):
     res = rest_api_pb2.Response()
     res.error.error_message = message
     return json_format.MessageToJson(res)
+
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    return obj.__dict__
