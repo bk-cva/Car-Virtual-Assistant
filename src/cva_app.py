@@ -88,7 +88,7 @@ def cva_handler():
     data = {}
     if topic == 'request_cva':
         user_id, utterance = [request[k] for k in ['user_id', 'utterance']]
-        response, metadata, intent = cva(utterance)
+        response, metadata, intent, action = cva(utterance)
 
         data = {
             'topic': 'message',
@@ -97,6 +97,7 @@ def cva_handler():
             'response': response,
             'metadata': metadata,
             'intent': intent,
+            'action': action,
         }
 
         redis.publish(REDIS_CHANNEL, json.dumps(data, default=lambda x: x.__dict__))
