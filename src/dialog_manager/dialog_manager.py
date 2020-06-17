@@ -48,6 +48,8 @@ class DialogManager:
                 self._set_state(State.CREATE_SCHEDULE)       
             elif intent == Intent.remind:
                 self._set_state(State.CREATE_SCHEDULE)
+            elif intent == Intent.cancel_schedule:
+                self._set_state(State.CANCEL_SCHEDULE)
             else:
                 return 'intent_not_found', {}
 
@@ -243,7 +245,7 @@ class DialogManager:
                     if self.main_intent == Intent.create_schedule:
                         self._set_state(State.ASK_DURATION)
                         return 'ask_duration', {}
-                    self._set_state(State.CREATING_SCHEDULE)
+                    self._set_state(State.CALL_CREATE_SCHEDULE)
                     return None
                 self._set_state(State.ASK_TIME)
                 return 'ask_time', {}
@@ -258,7 +260,7 @@ class DialogManager:
                     if self.main_intent == Intent.create_schedule:
                         self._set_state(State.ASK_DURATION)
                         return 'ask_duration', {}
-                    self._set_state(State.CREATING_SCHEDULE)
+                    self._set_state(State.CALL_CREATE_SCHEDULE)
                     return None
                 self._set_state(State.ASK_TIME)
                 return 'ask_time', {}
@@ -272,7 +274,7 @@ class DialogManager:
                 if self.main_intent == Intent.create_schedule:
                     self._set_state(State.ASK_DURATION)
                     return 'ask_duration', {}
-                self._set_state(State.CREATING_SCHEDULE)
+                self._set_state(State.CALL_CREATE_SCHEDULE)
                 return None
             else:
                 self._set_state(State.START)
@@ -281,11 +283,11 @@ class DialogManager:
             try:
                 time_entities = next(e for e in entities_list if e[0] == 'time')
                 self.tracker.update_state([('duration', time_entities[1])])
-                self._set_state(State.CREATING_SCHEDULE)
+                self._set_state(State.CALL_CREATE_SCHEDULE)
             except StopIteration:
                 self._set_state(State.START)
 
-        elif self.fsm == State.CREATING_SCHEDULE:
+        elif self.fsm == State.CALL_CREATE_SCHEDULE:
             current_state = self.tracker.get_state()
             # Default is today
             start_time = datetime.combine(date.today(), datetime.min.time())
@@ -313,6 +315,70 @@ class DialogManager:
             except Exception:
                 self._set_state(State.START)
                 return 'respond_create_schedule_alt', {}
+
+        elif self.fsm == State.CANCEL_SCHEDULE:
+            self.tracker.reset_state()
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
+            # Default is today
+            time_min = datetime.combine(date.today(), datetime.min.time())
+            time_max = time_min + timedelta(1)
+            if 'date' in current_state:
+                time_min = datetime.combine(normalize_date(
+                    current_state['date']), datetime.min.time())
+            if 'time' in current_state:
+                time_from, time_to = normalize_time_range(
+                    current_state['time'])
+                time_max = time_min + timedelta(hours=time_to.hour,
+                                                minutes=time_to.minute)
+                time_min = time_min + timedelta(hours=time_from.hour,
+                                                minutes=time_from.minute)
+            else:
+                time_max = time_min + timedelta(1)
+            items = self.schedule_api.request_schedule(
+                time_min=time_min, time_max=time_max)
+            self.cached['schedules'] = items
+            if len(items) == 0:
+                self._set_state(State.NO_SCHEDULE)
+            elif len(items) == 1:
+                self._set_state(State.ASK_CANCEL)
+                return 'ask_cancel', {'schedule': items[0]}
+            else:
+                self._set_state(State.SELECT_SCHEDULE)
+                return 'select_schedule', {'schedules': items}
+
+        elif self.fsm == State.NO_SCHEDULE:
+            return 'no_schedule', {}
+
+        elif self.fsm == State.SELECT_SCHEDULE:
+            if intent == Intent.select_item:
+                self.tracker.update_state(entities_list)
+                self._set_state(State.ASK_CANCEL)
+                return 'ask_cancel', {'schedule': self.cached['schedules'][self.tracker.get_state('number')]}
+            else:
+                self._set_state(State.START)
+
+        elif self.fsm == State.ASK_CANCEL:
+            if intent == Intent.yes:
+                self._set_state(State.CALL_CANCEL_SCHEDULE)
+            elif intent == Intent.no:
+                self._set_state(State.ABORT_CANCEL)
+            else:
+                self._set_state(State.START)
+
+        elif self.fsm == State.ABORT_CANCEL:
+            return 'abort_cancel', {}
+
+        elif self.fsm == State.CALL_CANCEL_SCHEDULE:
+            schedule = self.cached['schedules'][self.tracker.get_state('number', 0)]
+            try:
+                self.schedule_api.cancel_schedule(schedule['id'])
+                self._set_state(State.START)
+                return 'respond_cancel_schedule', {}
+            except Exception:
+                self._set_state(State.START)
+                return 'respond_cancel_schedule_alt', {}
+
         else:
             raise Exception('Unexpected state {}'.format(self.fsm))
 

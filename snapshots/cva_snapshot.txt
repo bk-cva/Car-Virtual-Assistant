@@ -1,7 +1,7 @@
 Địa điểm bạn muốn tìm là Trường Đại Học Bách Khoa.
 
 Địa điểm bạn muốn tìm là Trường Đại Học Bách Khoa.
-Tôi đã tìm được đường đến Trường Đại Học Bách Khoa.
+Bạn muốn đặt tên sự kiện này là gì?
 
 Tôi đã tìm được đường đến Trường Đại Học Bách Khoa.
 Tôi tìm được 3 địa điểm liên quan.
@@ -33,13 +33,21 @@ Xong. buổi hẹn lúc 17 giờ ngày 31 tháng 5 đã được tạo.
 
 Trong thời gian nào?
 Trong bao lâu?
-Xong. cuộc họp lúc 20 giờ hôm nay đã được tạo.
+Xong. cuộc họp lúc 08 giờ hôm nay đã được tạo.
 
 Trong bao lâu?
 Xong. họp lúc 05 giờ ngày 14 tháng 5 đã được tạo.
 
-Xong. chợ lúc 09 giờ ngày 14 tháng 5 đã được tạo.
+Bạn muốn đặt tên sự kiện này là gì?
 
 Trong thời gian nào?
 Xong. uống nước lúc 20 giờ ngày 13 tháng 5 đã được tạo.
+
+Tôi không tìm được sự kiện nào như thế trong lịch.
+
+Bạn có chắc muốn hủy sự kiện Họp diễn ra vào lúc 11 giờ ngày 14 tháng 5 không?
+Đã hủy sự kiện.
+
+Bạn có chắc muốn hủy sự kiện Họp diễn ra vào lúc 11 giờ ngày 14 tháng 5 không?
+OK, lịch của bạn vẫn được giữ nguyên.
 

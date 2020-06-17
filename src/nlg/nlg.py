@@ -1,7 +1,11 @@
 import re
 import logging
 import os.path
+from datetime import datetime
 from typing import Dict
+
+
+from ..utils.func import datetime_to_time_string
 
 
 logger = logging.getLogger(__name__)
@@ -102,6 +106,29 @@ class NLG:
 
         elif action == 'ask_place':
             response = 'Bạn muốn đi đâu?'.format(**substitutes)
+
+        elif action == 'no_schedule':
+            response = 'Tôi không tìm được sự kiện nào như thế trong lịch.'
+
+        elif action == 'select_schedule':
+            response = 'Tôi tìm được {} sự kiện. Bạn hãy chọn sự kiện mà bạn muốn hủy.'.format(len(substitutes['schedules']))
+
+        elif action == 'ask_cancel':
+            start = substitutes['schedule']['start']['dateTime']
+            start = re.sub(r'[+-]\d{2}:\d{2}', '', start)
+            response = 'Bạn có chắc muốn hủy sự kiện {} diễn ra vào lúc {} không?'.format(
+                substitutes['schedule']['summary'],
+                datetime_to_time_string(datetime.strptime(start, '%Y-%m-%dT%H:%M:%S'))
+            )
+
+        elif action == 'abort_cancel':
+            response = 'OK, lịch của bạn vẫn được giữ nguyên.'
+
+        elif action == 'respond_cancel_schedule':
+            response = 'Đã hủy sự kiện.'
+
+        elif action == 'respond_cancel_schedule_alt':
+            response = 'Đã có lỗi xảy ra. Có thể là do mạng không ổn định. Bạn hãy thử lại sau nhé.'
 
         else:
             logger.warning('No template found for \'{}\', use default.'.format(action))

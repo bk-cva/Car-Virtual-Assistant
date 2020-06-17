@@ -42,3 +42,11 @@ nhắc tôi đi chợ lúc 9 giờ sáng mai.
 
 nhắc tôi uống nước
 8 giờ tối nay.
+
+hủy lịch họp chiều nay.
+
+hủy lịch họp ngày mai.
+có
+
+hủy lịch họp ngày mai.
+không
