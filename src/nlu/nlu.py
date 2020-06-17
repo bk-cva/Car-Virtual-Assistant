@@ -7,7 +7,7 @@ from typing import List
 from .intents.constants import Intent
 from .entities.bert_ner import BertNER
 from src.proto.rest_api_pb2 import Entity
-from .common import MODEL_DIR, PHONE_CALL_REGEX, PHONE_TEXT_REGEX, SELECT_ITEM_REGEX
+from .common import MODEL_DIR, PHONE_CALL_REGEX, PHONE_TEXT_REGEX, SELECT_ITEM_REGEX, YES_REGEX, NO_REGEX
 
 
 class NLU:
@@ -27,6 +27,12 @@ class NLU:
         for pattern in SELECT_ITEM_REGEX:
             if re.search(pattern, text, re.IGNORECASE):
                 return Intent.select_item
+        for pattern in YES_REGEX:
+            if re.search(pattern, text, re.IGNORECASE):
+                return Intent.yes
+        for pattern in NO_REGEX:
+            if re.search(pattern, text, re.IGNORECASE):
+                return Intent.no
 
         x = self.nlp(text).vector
         return Intent(self.intent_model.predict([x])[0])

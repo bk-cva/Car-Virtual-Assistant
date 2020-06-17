@@ -17,3 +17,5 @@ class Intent(str, Enum):
     phone_call = 'phone_call'
     phone_text = 'phone_text'
     select_item = 'select_item'
+    yes = 'yes'
+    no = 'no'

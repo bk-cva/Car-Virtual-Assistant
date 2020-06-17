@@ -23,3 +23,14 @@ SELECT_ITEM_REGEX = [
     r'cái số (?P<number>\w+)$',
     r'cái (?P<number>đầu tiên)',
 ]
+
+YES_REGEX = [
+    r'^có$',
+    r'^ok$',
+    r'^ừ$',
+    r'^ừm$',
+]
+
+NO_REGEX = [
+    r'^không$',
+]
