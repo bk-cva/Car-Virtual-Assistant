@@ -155,17 +155,18 @@ class DialogManager:
             self._set_state(State.POST_RETURN_LOCATION)
 
             info_type = self.tracker.get_state('info_type')
+            metadata = {'locations': [vars(item)]}
             if info_type is not None:
                 if info_type == 'đường':
-                    return 'respond_location_street', vars(item)
+                    return 'respond_location_street', metadata
                 elif info_type == 'quận':
-                    return 'respond_location_district', vars(item)
+                    return 'respond_location_district', metadata
                 elif info_type == 'khoảng cách':
-                    return 'respond_location_distance', vars(item)
+                    return 'respond_location_distance', metadata
             if len(self.cached['locations']) > 1:
-                return 'respond_location', vars(item)
+                return 'respond_location', metadata
             else:
-                return 'respond_location_single', vars(item)
+                return 'respond_location_single', metadata
 
         elif self.fsm == State.POST_RETURN_LOCATION:
             if intent == Intent.select_item:

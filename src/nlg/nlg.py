@@ -17,7 +17,7 @@ class NLG:
         self.newline = re.compile(r'\\n|\\t|\\b|\\r')
         self.dup_space = re.compile(r'\s+')
 
-    def __call__(self, action, substitutes: Dict) -> str:
+    def __call__(self, action: str, substitutes: Dict) -> str:
         # preprocess substitutes
         for k, v in substitutes.items():
             if v is None:
@@ -28,20 +28,18 @@ class NLG:
         if action == 'intent_not_found':
             response = 'Xin lỗi, tôi không hiểu ý bạn.'
 
-        elif action == 'respond_location':
-            response = 'Địa điểm bạn muốn tìm là {title}.'.format(**substitutes)
-
-        elif action == 'respond_location_single':
-            response = 'Tôi tìm được 1 địa điểm là {title}.'.format(**substitutes)
-
-        elif action == 'respond_location_street':
-            response = 'Nó nằm trên đường {street}.'.format(**substitutes)
-
-        elif action == 'respond_location_district':
-            response = 'Nó nằm ở {district}.'.format(**substitutes)
-
-        elif action == 'respond_location_distance':
-            response = 'Cách đây {distance} mét.'.format(**substitutes)
+        elif action.startswith('respond_location'):
+            location = substitutes['locations'][0]
+            if action.endswith('single'):
+                response = 'Tôi tìm được 1 địa điểm là {title}.'.format(**location)
+            elif action.endswith('street'):
+                response = 'Nó nằm trên đường {street}.'.format(**location)
+            elif action.endswith('district'):
+                response = 'Nó nằm ở {district}.'.format(**location)
+            elif action.endswith('distance'):
+                response = 'Cách đây {distance} mét.'.format(**location)
+            else:
+                response = 'Địa điểm bạn muốn tìm là {title}.'.format(**location)
 
         elif action == 'respond_address_location':
             address = []
