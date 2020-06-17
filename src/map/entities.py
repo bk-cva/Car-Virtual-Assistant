@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 from typing import Tuple
 
@@ -24,8 +25,8 @@ class HerePlace(Place):
         self.id = item.get('id')
         self.access = item.get('access', [])
         self.distance = item.get('distance')
-        self.houseNumber = address.get('houseNumber')
-        self.street = address.get('street')
+        self.houseNumber = address.get('houseNumber', '')
+        self.street = re.sub(r'^đường', '', address.get('street', ''), flags=re.IGNORECASE).strip()
         self.district = address.get('district')
         self.city = address.get('city')
         self.categories = []

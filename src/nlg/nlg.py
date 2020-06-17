@@ -18,13 +18,6 @@ class NLG:
         self.dup_space = re.compile(r'\s+')
 
     def __call__(self, action: str, substitutes: Dict) -> str:
-        # preprocess substitutes
-        for k, v in substitutes.items():
-            if v is None:
-                substitutes[k] = ''
-        if 'street' in substitutes:
-            substitutes['street'] = re.sub(r'^đường', '', substitutes['street'], flags=re.IGNORECASE)
-
         if action == 'intent_not_found':
             response = 'Xin lỗi, tôi không hiểu ý bạn.'
 
