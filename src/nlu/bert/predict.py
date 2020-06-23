@@ -3,18 +3,8 @@ import pickle
 from absl import logging
 import tensorflow as tf
 
-from ..common import MODEL_DIR
 from .modeling import BertConfig, BertModel, get_assignment_map_from_checkpoint
 from .tokenization import convert_to_unicode, FullTokenizer
-
-bert_config_file = os.path.join(MODEL_DIR, 'bert_config.json')
-init_checkpoint = tf.train.latest_checkpoint(MODEL_DIR)
-vocab_file = os.path.join(MODEL_DIR, 'vocab.txt')
-max_seq_length = 64
-do_lower_case = False
-predict_batch_size = 1
-num_intent_labels = 12
-num_entity_labels = 54
 
 
 class InputExample(object):
@@ -124,14 +114,14 @@ def crf_loss(logits, labels, num_labels, mask2len):
 
 
 def create_model(bert_config, is_training, input_ids, mask,
-                 segment_ids, labels, use_one_hot_embeddings):
+                 segment_ids, labels, num_intent_labels, num_entity_labels):
     model = BertModel(
         config=bert_config,
         is_training=is_training,
         input_ids=input_ids,
         input_mask=mask,
         token_type_ids=segment_ids,
-        use_one_hot_embeddings=use_one_hot_embeddings
+        use_one_hot_embeddings=False
     )
 
     # The 12th encoder output is used to feed to the CRF layer to output the entity name
@@ -140,7 +130,6 @@ def create_model(bert_config, is_training, input_ids, mask,
 
     logits = tf.keras.layers.Dense(
         num_entity_labels, activation=None, name='ner/logits')(ner_output_layer)
-    # logits = tf.reshape(logits, [-1, max_seq_length, num_labels])
     mask2len = tf.reduce_sum(mask, axis=1)
     trans = crf_loss(logits, labels, num_entity_labels, mask2len)
     ner_predict, _ = tf.contrib.crf.crf_decode(logits, trans, mask2len)
@@ -151,34 +140,52 @@ def create_model(bert_config, is_training, input_ids, mask,
         256, activation='relu', name='intent/hiddens')(mean_layer)
     logits = tf.keras.layers.Dense(
         num_intent_labels, activation=None, name='intent/outputs')(hidden_layer)
-    # logits = tf.reshape(logits, [-1, num_labels])
     intent_predict = tf.math.argmax(logits, axis=-1)
     return ner_predict, intent_predict
 
 
 class BertPredictor:
-    def __init__(self):
-        bert_config = BertConfig.from_json_file(bert_config_file)
-        if max_seq_length > bert_config.max_position_embeddings:
+    def __init__(self, model_dir):
+        self.bert_config_file = os.path.join(model_dir, 'bert_config.json')
+        self.init_checkpoint = tf.train.latest_checkpoint(model_dir)
+        self.vocab_file = os.path.join(model_dir, 'vocab.txt')
+        self.max_seq_length = 64
+        self.do_lower_case = False
+
+        bert_config = BertConfig.from_json_file(self.bert_config_file)
+
+        if self.max_seq_length > bert_config.max_position_embeddings:
             raise ValueError(
                 "Cannot use sequence length %d because the BERT model "
                 "was only trained up to sequence length %d" %
-                (max_seq_length, bert_config.max_position_embeddings))
+                (self.max_seq_length, bert_config.max_position_embeddings))
+
         self.processor = NerProcessor()
 
-        self.tokenizer = FullTokenizer(vocab_file=vocab_file, do_lower_case=False)
+        self.tokenizer = FullTokenizer(
+            vocab_file=self.vocab_file, do_lower_case=self.do_lower_case)
 
-        self.input_ids = tf.placeholder(tf.int32, shape=[1, max_seq_length])
-        self.mask = tf.placeholder(tf.int32, shape=[1, max_seq_length])
-        segment_ids = tf.zeros(shape=[1, max_seq_length], dtype=tf.int32)
-        label_ids = tf.zeros(shape=[1, max_seq_length], dtype=tf.int32)
+        with open(os.path.join(model_dir, 'entities_label2id.pkl'), 'rb') as rf:
+            label2id_dict = pickle.load(rf)
+            self.entities_id2label = {
+                value: key for key, value in label2id_dict.items()}
+
+        with open(os.path.join(model_dir, 'intents_label2id.pkl'), 'rb') as rf:
+            label2id_dict = pickle.load(rf)
+            self.intents_id2label = {
+                value: key for key, value in label2id_dict.items()}
+
+        self.input_ids = tf.placeholder(tf.int32, shape=[1, self.max_seq_length])
+        self.mask = tf.placeholder(tf.int32, shape=[1, self.max_seq_length])
+        segment_ids = tf.zeros(shape=[1, self.max_seq_length], dtype=tf.int32)
+        label_ids = tf.zeros(shape=[1, self.max_seq_length], dtype=tf.int32)
         self.ner_predicts, self.intent_predicts = create_model(bert_config, False, self.input_ids,
                                                                self.mask, segment_ids, label_ids,
-                                                               use_one_hot_embeddings=False)
+                                                               len(self.intents_id2label), len(self.entities_id2label))
         tvars = tf.trainable_variables()
         (assignment_map, initialized_variable_names) = get_assignment_map_from_checkpoint(
-            tvars, init_checkpoint)
-        tf.train.init_from_checkpoint(init_checkpoint, assignment_map)
+            tvars, self.init_checkpoint)
+        tf.train.init_from_checkpoint(self.init_checkpoint, assignment_map)
         logging.info("**** Trainable Variables ****")
         for var in tvars:
             init_string = ""
@@ -190,21 +197,10 @@ class BertPredictor:
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
 
-        with open(os.path.join(MODEL_DIR, 'entities_label2id.pkl'), 'rb') as rf:
-            label2id_dict = pickle.load(rf)
-            self.entities_id2label = {
-                value: key for key, value in label2id_dict.items()}
-
-        with open(os.path.join(MODEL_DIR, 'intents_label2id.pkl'), 'rb') as rf:
-            label2id_dict = pickle.load(rf)
-            self.intents_id2label = {
-                value: key for key, value in label2id_dict.items()}
-
     def predict(self, item: str):
         predict_example = self.processor.get_test_examples(item)[0]
         feature, ntokens = convert_single_example(
-            predict_example, max_seq_length, self.tokenizer)
-        batch_tokens = ntokens
+            predict_example, self.max_seq_length, self.tokenizer)
 
         ner_predictions, intent_predictions = self.sess.run([self.ner_predicts, self.intent_predicts], {
             self.input_ids: [feature.input_ids],
@@ -213,7 +209,7 @@ class BertPredictor:
 
         ner_results = []
         for i, prediction in enumerate(ner_predictions[0]):
-            token = batch_tokens[i]
+            token = ntokens[i]
             predict = self.entities_id2label[prediction]
             if token != "[PAD]" and token != "[CLS]":
                 if token.startswith("##"):

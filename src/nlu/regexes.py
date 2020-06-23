@@ -1,7 +1,3 @@
-import os.path
-
-MODEL_DIR = '/models'
-
 PHONE_CALL_REGEX = [
     r'^gọi điện thoại cho (?P<person_name>[\w\s]+)',
     r'^gọi điện thoại tới (?P<person_name>[\w\s]+)',

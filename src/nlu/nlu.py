@@ -1,15 +1,15 @@
 import re
 from typing import List
 
-from .intents.constants import Intent
-from .bert.predict import BertPredictor
+from .intent import Intent
 from src.proto.rest_api_pb2 import Entity
-from .common import MODEL_DIR, PHONE_CALL_REGEX, PHONE_TEXT_REGEX, SELECT_ITEM_REGEX, YES_REGEX, NO_REGEX
+from .bert.predict import BertPredictor
+from .regexes import PHONE_CALL_REGEX, PHONE_TEXT_REGEX, SELECT_ITEM_REGEX, YES_REGEX, NO_REGEX
 
 
 class NLU:
     def __init__(self):
-        self.nlu_model = BertPredictor()
+        self.nlu_model = BertPredictor('/models')
 
     def predict(self, text: str) -> List[Entity]:
         """Predict intent of a string & extract entities"""
