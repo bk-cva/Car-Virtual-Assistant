@@ -4,17 +4,17 @@ from absl import logging
 import tensorflow as tf
 
 from ..common import MODEL_DIR
-from .bert_modeling import BertConfig, BertModel, get_assignment_map_from_checkpoint
-from .bert_tokenization import convert_to_unicode, FullTokenizer
+from .modeling import BertConfig, BertModel, get_assignment_map_from_checkpoint
+from .tokenization import convert_to_unicode, FullTokenizer
 
 bert_config_file = os.path.join(MODEL_DIR, 'bert_config.json')
 init_checkpoint = tf.train.latest_checkpoint(MODEL_DIR)
-label2id = os.path.join(MODEL_DIR, 'label2id.pkl')
 vocab_file = os.path.join(MODEL_DIR, 'vocab.txt')
-output_dir = 'output'
 max_seq_length = 64
 do_lower_case = False
 predict_batch_size = 1
+num_intent_labels = 12
+num_entity_labels = 54
 
 
 class InputExample(object):
@@ -51,24 +51,6 @@ class NerProcessor:
         return self._create_example(
             [(fake_labels, item)], "test"
         )
-
-    def get_labels(self):
-        """
-        here "X" used to represent "##eer","##soo" and so on!
-        "[PAD]" for padding
-        :return:
-        """
-        return ['[PAD]', 'O', 'B-place', 'I-place',
-                'B-place_property', 'I-place_property', 'B-district', 'B-ward', 'I-ward',
-                'B-street', 'I-street', 'B-route_property', 'I-route_property', 'B-info_type',
-                'I-info_type', 'I-district', 'B-address', 'B-personal_place', 'I-personal_place',
-                'B-activity', 'I-activity', 'B-time', 'B-date', 'I-time', 'B-action_type', 'B-side',
-                'B-quantity', 'B-air_type', 'I-air_type', 'B-air_temp', 'I-air_temp', 'B-period',
-                'I-period', 'I-date', 'B-news_topic', 'I-news_topic', 'B-radio_channel',
-                'I-radio_channel', 'B-music_genre', 'I-music_genre', 'B-musician', 'I-musician',
-                'B-song_name', 'I-song_name', 'I-action_type', 'B-event', 'I-event',
-                'B-schedule_property', 'I-schedule_property', 'B-location', 'I-location',
-                'X', '[CLS]', '[SEP]']
 
     def _create_example(self, lines, set_type):
         examples = []
@@ -121,11 +103,6 @@ def convert_single_example(example, max_seq_length, tokenizer):
     return feature, ntokens
 
 
-def hidden2tag(hiddenlayer, numclass):
-    linear = tf.keras.layers.Dense(numclass, activation=None)
-    return linear(hiddenlayer)
-
-
 def crf_loss(logits, labels, num_labels, mask2len):
     """
     :param logits:
@@ -140,33 +117,14 @@ def crf_loss(logits, labels, num_labels, mask2len):
             initializer=tf.contrib.layers.xavier_initializer()
         )
 
-    log_likelihood, transition = tf.contrib.crf.crf_log_likelihood(
+    _, transition = tf.contrib.crf.crf_log_likelihood(
         logits, labels, transition_params=trans, sequence_lengths=mask2len)
-    loss = tf.math.reduce_mean(-log_likelihood)
 
-    return loss, transition
-
-
-def softmax_layer(logits, labels, num_labels, mask):
-    logits = tf.reshape(logits, [-1, num_labels])
-    labels = tf.reshape(labels, [-1])
-    mask = tf.cast(mask, dtype=tf.float32)
-    one_hot_labels = tf.one_hot(labels, depth=num_labels, dtype=tf.float32)
-    loss = tf.losses.softmax_cross_entropy(
-        logits=logits, onehot_labels=one_hot_labels)
-    loss *= tf.reshape(mask, [-1])
-    loss = tf.reduce_sum(loss)
-    total_size = tf.reduce_sum(mask)
-    total_size += 1e-12  # to avoid division by 0 for all-0 weights
-    loss /= total_size
-    # predict not mask we could filtered it in the prediction part.
-    probabilities = tf.math.softmax(logits, axis=-1)
-    predict = tf.math.argmax(probabilities, axis=-1)
-    return loss, predict
+    return transition
 
 
 def create_model(bert_config, is_training, input_ids, mask,
-                 segment_ids, labels, num_labels, use_one_hot_embeddings):
+                 segment_ids, labels, use_one_hot_embeddings):
     model = BertModel(
         config=bert_config,
         is_training=is_training,
@@ -176,17 +134,29 @@ def create_model(bert_config, is_training, input_ids, mask,
         use_one_hot_embeddings=use_one_hot_embeddings
     )
 
-    output_layer = model.get_sequence_output()
-    logits = hidden2tag(output_layer, num_labels)
-    logits = tf.reshape(logits, [-1, max_seq_length, num_labels])
+    # The 12th encoder output is used to feed to the CRF layer to output the entity name
+    # While the last encoder (16th) is used to feed to the mean and fc layers to output the intent.
+    ner_output_layer, *_, intent_output_layer = model.get_all_encoder_layers()[-5:]
+
+    logits = tf.keras.layers.Dense(
+        num_entity_labels, activation=None, name='ner/logits')(ner_output_layer)
+    # logits = tf.reshape(logits, [-1, max_seq_length, num_labels])
     mask2len = tf.reduce_sum(mask, axis=1)
-    loss, trans = crf_loss(logits, labels, num_labels, mask2len)
-    predict, viterbi_score = tf.contrib.crf.crf_decode(
-        logits, trans, mask2len)
-    return loss, logits, predict
+    trans = crf_loss(logits, labels, num_entity_labels, mask2len)
+    ner_predict, _ = tf.contrib.crf.crf_decode(logits, trans, mask2len)
+
+    mean_layer = tf.reduce_sum(intent_output_layer, axis=1) / \
+        tf.cast(tf.reshape(tf.reduce_sum(mask, axis=1), (-1, 1)), tf.float32)
+    hidden_layer = tf.keras.layers.Dense(
+        256, activation='relu', name='intent/hiddens')(mean_layer)
+    logits = tf.keras.layers.Dense(
+        num_intent_labels, activation=None, name='intent/outputs')(hidden_layer)
+    # logits = tf.reshape(logits, [-1, num_labels])
+    intent_predict = tf.math.argmax(logits, axis=-1)
+    return ner_predict, intent_predict
 
 
-class BertNER:
+class BertPredictor:
     def __init__(self):
         bert_config = BertConfig.from_json_file(bert_config_file)
         if max_seq_length > bert_config.max_position_embeddings:
@@ -196,17 +166,15 @@ class BertNER:
                 (max_seq_length, bert_config.max_position_embeddings))
         self.processor = NerProcessor()
 
-        label_list = self.processor.get_labels()
-
         self.tokenizer = FullTokenizer(vocab_file=vocab_file, do_lower_case=False)
 
-        self.input_ids = tf.placeholder(tf.int32, shape=[1, 64])
-        self.mask = tf.placeholder(tf.int32, shape=[1, 64])
-        segment_ids = tf.zeros(shape=[1, 64], dtype=tf.int32)
-        label_ids = tf.zeros(shape=[1, 64], dtype=tf.int32)
-        (*_, self.predicts) = create_model(bert_config, False, self.input_ids,
-                                           self.mask, segment_ids, label_ids, len(label_list),
-                                           use_one_hot_embeddings=False)
+        self.input_ids = tf.placeholder(tf.int32, shape=[1, max_seq_length])
+        self.mask = tf.placeholder(tf.int32, shape=[1, max_seq_length])
+        segment_ids = tf.zeros(shape=[1, max_seq_length], dtype=tf.int32)
+        label_ids = tf.zeros(shape=[1, max_seq_length], dtype=tf.int32)
+        self.ner_predicts, self.intent_predicts = create_model(bert_config, False, self.input_ids,
+                                                               self.mask, segment_ids, label_ids,
+                                                               use_one_hot_embeddings=False)
         tvars = tf.trainable_variables()
         (assignment_map, initialized_variable_names) = get_assignment_map_from_checkpoint(
             tvars, init_checkpoint)
@@ -222,40 +190,38 @@ class BertNER:
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
 
-        with open(label2id, 'rb') as rf:
+        with open(os.path.join(MODEL_DIR, 'entities_label2id.pkl'), 'rb') as rf:
             label2id_dict = pickle.load(rf)
-            self.id2label = {value: key for key, value in label2id_dict.items()}
+            self.entities_id2label = {
+                value: key for key, value in label2id_dict.items()}
+
+        with open(os.path.join(MODEL_DIR, 'intents_label2id.pkl'), 'rb') as rf:
+            label2id_dict = pickle.load(rf)
+            self.intents_id2label = {
+                value: key for key, value in label2id_dict.items()}
 
     def predict(self, item: str):
-        predict_examples = self.processor.get_test_examples(item)
+        predict_example = self.processor.get_test_examples(item)[0]
+        feature, ntokens = convert_single_example(
+            predict_example, max_seq_length, self.tokenizer)
+        batch_tokens = ntokens
 
-        batch_tokens = []
-        batch_features = {
-            "input_ids": [],
-            "mask": [],
-        }
-        for example in predict_examples:
-            feature, ntokens = convert_single_example(example, max_seq_length, self.tokenizer)
-            batch_tokens.extend(ntokens)
-            batch_features["input_ids"].append(feature.input_ids)
-            batch_features["mask"].append(feature.mask)
+        ner_predictions, intent_predictions = self.sess.run([self.ner_predicts, self.intent_predicts], {
+            self.input_ids: [feature.input_ids],
+            self.mask: [feature.mask],
+        })
 
-        predictions = self.sess.run(self.predicts, {
-            self.input_ids: batch_features['input_ids'],
-            self.mask: batch_features['mask'],
-        })[0]
-
-        results = []
-        for i, prediction in enumerate(predictions):
+        ner_results = []
+        for i, prediction in enumerate(ner_predictions[0]):
             token = batch_tokens[i]
-            predict = self.id2label[prediction]
+            predict = self.entities_id2label[prediction]
             if token != "[PAD]" and token != "[CLS]":
                 if token.startswith("##"):
-                    results[-1][1] += token[2:]
+                    ner_results[-1][1] += token[2:]
                     continue
                 if predict == 'X':
-                    results[-1][1] += token
+                    ner_results[-1][1] += token
                     continue
-                results.append([predict, token])
+                ner_results.append([predict, token])
 
-        return results
+        return self.intents_id2label[intent_predictions[0]], ner_results

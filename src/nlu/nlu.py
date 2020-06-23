@@ -1,45 +1,35 @@
 import re
-import spacy
-import pickle
-import os.path
 from typing import List
 
 from .intents.constants import Intent
-from .entities.bert_ner import BertNER
+from .bert.predict import BertPredictor
 from src.proto.rest_api_pb2 import Entity
 from .common import MODEL_DIR, PHONE_CALL_REGEX, PHONE_TEXT_REGEX, SELECT_ITEM_REGEX, YES_REGEX, NO_REGEX
 
 
 class NLU:
     def __init__(self):
-        self.ner_model = BertNER()
-        self.nlp = spacy.load('vi_spacy_model')
-        self.intent_model = pickle.load(open(os.path.join(MODEL_DIR, 'clf.sav'), mode='rb'))
+        self.nlu_model = BertPredictor()
 
-    def predict_intent(self, text: str) -> Intent:
-        """Predict intent of a string"""
-        for pattern in PHONE_CALL_REGEX:
-            if re.search(pattern, text, re.IGNORECASE):
-                return Intent.phone_call
-        for pattern in PHONE_TEXT_REGEX:
-            if re.search(pattern, text, re.IGNORECASE):
-                return Intent.phone_text
-        for pattern in SELECT_ITEM_REGEX:
-            if re.search(pattern, text, re.IGNORECASE):
-                return Intent.select_item
-        for pattern in YES_REGEX:
-            if re.search(pattern, text, re.IGNORECASE):
-                return Intent.yes
-        for pattern in NO_REGEX:
-            if re.search(pattern, text, re.IGNORECASE):
-                return Intent.no
+    def predict(self, text: str) -> List[Entity]:
+        """Predict intent of a string & extract entities"""
+        # Use regex matching first
+        intent_result = None
+        regex_list = [
+            (PHONE_CALL_REGEX, Intent.phone_call),
+            (PHONE_TEXT_REGEX, Intent.phone_text),
+            (SELECT_ITEM_REGEX, Intent.select_item),
+            (YES_REGEX, Intent.yes),
+            (NO_REGEX, Intent.no),
+        ]
+        for patterns, intent in regex_list:
+            for pattern in patterns:
+                if re.search(pattern, text, re.IGNORECASE):
+                    intent_result = intent
+            if intent_result is not None:
+                break
 
-        x = self.nlp(text).vector
-        return Intent(self.intent_model.predict([x])[0])
-
-    def predict_entities(self, text: str) -> List[Entity]:
-        """Extract entities"""
-        results = []
+        ner_results = []
         for pattern in PHONE_CALL_REGEX + PHONE_TEXT_REGEX + SELECT_ITEM_REGEX:
             search_res = re.search(pattern, text, re.IGNORECASE)
             if search_res:
@@ -47,13 +37,15 @@ class NLU:
                     entity = Entity()
                     entity.name = name
                     entity.value = value
-                    results.append(entity)
+                    ner_results.append(entity)
                 break
-        if len(results) > 0:
-            return results
 
-        bert_predictions = self.ner_model.predict(text)
-        return self._convert_bert_predictions_to_entities_list(bert_predictions)
+        if intent_result is not None:
+            return intent_result, ner_results
+
+        # If not match, use model
+        intent_result, ner_results = self.nlu_model.predict(text)
+        return Intent(intent_result), self._convert_bert_predictions_to_entities_list(ner_results)
 
     @staticmethod
     def _convert_bert_predictions_to_entities_list(bert_predictions) -> List[Entity]:
