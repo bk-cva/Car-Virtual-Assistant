@@ -3,7 +3,6 @@ Flask==1.1.1
 Flask-Cors==3.0.8
 Flask-Sockets==0.2.1
 protobuf==3.6.1
-tensorflow==1.15.0
 scikit-learn==0.22.2
 python-dotenv==0.12.0
 fuzzywuzzy==0.18.0
