@@ -7,7 +7,7 @@ from src.nlu.intent import Intent
 from src.config_manager import ConfigManager
 
 
-TIMEZONE = list(map(int, ConfigManager().get('TIMEZONE', '+07:00').split(':')))
+TIMEZONE = list(map(int, ConfigManager().get('TIMEZONE').split(':')))
 
 NORMALIZE_ENTITY_DICT = {
     'number': {

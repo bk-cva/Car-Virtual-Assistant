@@ -4,7 +4,6 @@ import requests
 from datetime import datetime, date
 from fuzzywuzzy import fuzz
 
-from ..config_manager import ConfigManager
 from ..nlu.intent import Intent
 from src.proto.rest_api_pb2 import Entity
 
@@ -13,10 +12,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def call_nlu(text: str):
+def call_external_nlu(nlu_url: str, text: str):
     """Call NLU from remote URL"""
-    nlu_url = ConfigManager().get('NLU_URL')
-
     try:
         payload = {'texts': [text]}
         res = requests.post(nlu_url, json=payload)

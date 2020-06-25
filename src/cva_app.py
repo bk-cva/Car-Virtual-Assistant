@@ -11,13 +11,14 @@ from datetime import date, datetime
 
 from src.proto import rest_api_pb2
 from src.cva import CVA
+from src.config_manager import ConfigManager
 
 
 fh = logging.FileHandler('debug.log')
 fh.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s')
 fh.setFormatter(formatter)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 logger.addHandler(fh)
 
@@ -29,7 +30,8 @@ sockets = Sockets(app)
 REDIS_CHANNEL = 'cva'
 redis = redis.from_url('redis://redis:6379/0')
 
-cva = CVA()
+do_call_external_nlu = ConfigManager().get('DO_CALL_EXTERNAL_NLU') == 'true'
+cva = CVA(do_call_external_nlu=do_call_external_nlu)
 
 
 class Broker(object):

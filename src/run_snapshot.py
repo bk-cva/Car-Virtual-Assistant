@@ -1,4 +1,7 @@
 import os
+
+os.environ['SCHEDULE_API_DRY_RUN'] = 'true'
+
 import logging
 from datetime import date, datetime
 from unittest.mock import patch
@@ -22,7 +25,6 @@ mock_now_patcher = patch('src.dialog_manager.normalization.now')
 mock_now = mock_now_patcher.start()
 mock_now.return_value = datetime(2020, 5, 13, 7, 0, 0)
 
-os.environ['SCHEDULE_API_DRY_RUN'] = 'true'
 
 cva = CVA()
 user_snapshot = []

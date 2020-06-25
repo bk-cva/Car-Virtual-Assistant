@@ -22,7 +22,7 @@ class ScheduleSDK:
         self.url = config.get('CVA_DB_URL')
         self.calendar_id = config.get('CALENDAR_ID')
         self.dry_run = config.get('SCHEDULE_API_DRY_RUN') == 'true'
-        
+
     def request_schedule(self, time_min: datetime, time_max: datetime, q: str = None) -> List[Event]:
         try:
             payload = {'calendarId': self.calendar_id,

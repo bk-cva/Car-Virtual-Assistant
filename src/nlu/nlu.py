@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Tuple
 
 from .intent import Intent
 from src.proto.rest_api_pb2 import Entity
@@ -11,8 +11,8 @@ class NLU:
     def __init__(self):
         self.nlu_model = BertPredictor('/models')
 
-    def predict(self, text: str) -> List[Entity]:
-        """Predict intent of a string & extract entities"""
+    def predict(self, text: str) -> Tuple[Intent, List[Entity]]:
+        """Predict intent & extract entities of a string"""
         # Use regex matching first
         intent_result = None
         regex_list = [

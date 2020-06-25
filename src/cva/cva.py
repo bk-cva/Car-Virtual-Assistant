@@ -2,10 +2,12 @@ import logging
 from datetime import date
 from unittest.mock import patch
 
-from src.dialog_manager.dialog_manager import DialogManager
+from src.config_manager import ConfigManager
+from src.nlu import NLU
+from src.utils import call_external_nlu, NluException
 from src.dialog_manager.normalization import normalize
+from src.dialog_manager.dialog_manager import DialogManager
 from src.nlg import NLG
-from src.utils import call_nlu, NluException
 
 
 logger = logging.getLogger(__name__)
@@ -13,9 +15,14 @@ logger.setLevel(logging.DEBUG)
 
 
 class CVA:
-    def __init__(self):
+    def __init__(self, do_call_external_nlu: bool = True):
         self.manager = DialogManager()
         self.nlg = NLG()
+        self.do_call_external_nlu = do_call_external_nlu
+        if self.do_call_external_nlu:
+            self.nlu_url = ConfigManager().get('NLU_URL')
+        else:
+            self.nlu = NLU()
 
     def reset(self):
         logger.debug('Reset state.')
@@ -23,7 +30,10 @@ class CVA:
 
     def __call__(self, utterance: str, latitude: float = 10.7720642, longitude: float = 106.6586572):
         try:
-            intent, entities = call_nlu(utterance)
+            if self.do_call_external_nlu:
+                intent, entities = call_external_nlu(self.nlu_url, utterance)
+            else:
+                intent, entities = self.nlu.predict(utterance)
         except NluException:
             return self.nlg(None, {}), {}, None
 
