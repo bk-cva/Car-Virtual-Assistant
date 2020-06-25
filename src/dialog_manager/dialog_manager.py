@@ -6,7 +6,7 @@ from .dialog_state_tracker import FeaturizedTracker
 from .response_selector import ResponseSelector
 from .state import State
 from .normalization import NormalEntity, normalize_date, normalize_time_range, normalize_time, normalize_duration
-from src.nlu.intents.constants import Intent
+from src.nlu.intent import Intent
 from src.map.here import HereSDK
 from src.utils import match_string
 from src.db.schedule import ScheduleSDK

@@ -3,7 +3,7 @@ from datetime import date, timedelta, datetime, time
 from typing import Tuple
 
 from src.proto.rest_api_pb2 import Entity
-from src.nlu.intents.constants import Intent
+from src.nlu.intent import Intent
 
 
 NORMALIZE_ENTITY_DICT = {
