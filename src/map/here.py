@@ -3,7 +3,7 @@ import logging
 from requests.exceptions import HTTPError
 from typing import Tuple, List
 
-from ..common.config_manager import ConfigManager
+from ..config_manager import ConfigManager
 from .entities import HerePlace, Place
 
 

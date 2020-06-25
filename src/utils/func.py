@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, date
 from fuzzywuzzy import fuzz
 
-from ..common.config_manager import ConfigManager
+from ..config_manager import ConfigManager
 from ..nlu.intent import Intent
 from src.proto.rest_api_pb2 import Entity
 

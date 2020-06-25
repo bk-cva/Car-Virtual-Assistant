@@ -1,7 +1,3 @@
-from os import getenv
-from dotenv import load_dotenv
-
-
 class Singleton(type):
     _instances = {}
 
@@ -11,12 +7,3 @@ class Singleton(type):
                 Singleton, cls).__call__(
                 *args, **kwargs)
         return cls._instances[cls]
-
-
-class ConfigManager(metaclass=Singleton):
-    def __init__(self):
-        load_dotenv()
-
-    @staticmethod
-    def get(key: str, default=None):
-        return getenv(key, default)

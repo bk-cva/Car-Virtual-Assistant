@@ -4,7 +4,7 @@ import requests
 from datetime import datetime, timezone, timedelta
 from typing import List
 
-from ..common.config_manager import ConfigManager
+from ..config_manager import ConfigManager
 from .entities.event import Event
 
 

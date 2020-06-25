@@ -4,7 +4,7 @@ from typing import Tuple
 
 from src.proto.rest_api_pb2 import Entity
 from src.nlu.intent import Intent
-from src.common.config_manager import ConfigManager
+from src.config_manager import ConfigManager
 
 
 TIMEZONE = list(map(int, ConfigManager().get('TIMEZONE', '+07:00').split(':')))
