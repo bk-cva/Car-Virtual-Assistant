@@ -1,0 +1,85 @@
+User: trường đại học Bách Khoa ở đâu?
+CVA: Địa điểm bạn muốn tìm là Trường Đại Học Bách Khoa.
+
+User: trường đại học Bách Khoa ở đâu?
+CVA: Địa điểm bạn muốn tìm là Trường Đại Học Bách Khoa.
+User: đưa tôi tới đó.
+CVA: Tôi đã tìm được đường đến Trường Đại Học Bách Khoa.
+
+User: chỉ đường đến trường đại học Bách Khoa?
+CVA: Tôi đã tìm được đường đến Trường Đại Học Bách Khoa.
+User: chỉ tôi tới trường đại học Khoa học tự nhiên?
+CVA: Tôi tìm được 3 địa điểm liên quan.
+User: tới cái đầu tiên.
+CVA: Tôi đã tìm được đường đến Trung Tâm Tin Học Đại Học Khoa Học Tự Nhiên.
+
+User: trường đại học Bách Khoa nằm ở đường nào?
+CVA: Nó nằm trên đường Lý Thường Kiệt.
+
+User: trường đại học Bách Khoa nằm ở quận mấy?
+CVA: Nó nằm ở Phường 14.
+
+User: đưa tôi tới trạm xăng gần nhất.
+CVA: Tôi đã tìm được đường đến Trạm Xăng Số 11.
+
+User: tôi đang ở đâu vậy?
+CVA: Bạn đang ở gần đường Lý Thường Kiệt Phường 14 Quận 10.
+
+User: chở mình đến số 268 đường Điện Biên Phủ.
+CVA: Đường đến số 268 đường Điện Biên Phủ đang hiển thị trên bản đồ.
+
+User: số 268 đường Điện Biên Phủ nằm ở đâu?
+CVA: Vị trí của số 268 đường Điện Biên Phủ đang hiển thị trên bản đồ.
+
+User: lịch ngày mai tôi có việc gì không?
+CVA: Có 1 sự kiện trong ngày 14 tháng 05.
+
+User: lịch ngày mốt tôi có việc gì không?
+CVA: Không có sự kiện trong ngày 15 tháng 05.
+
+User: chiều nay có họp không?
+CVA: Không có sự kiện từ 13 giờ ngày 13 tháng 5 đến 18 giờ ngày 13 tháng 5.
+
+User: tạo cuộc họp lúc 5 giờ
+CVA: Trong bao lâu?
+User: 2 giờ
+CVA: Xong. cuộc họp lúc 17 giờ hôm nay đã được tạo.
+
+User: đặt buổi hẹn lúc 5 giờ ngày 31
+CVA: Trong bao lâu?
+User: 1 giờ
+CVA: Xong. buổi hẹn lúc 17 giờ ngày 31 tháng 5 đã được tạo.
+
+User: tạo cuộc họp trong lịch
+CVA: Trong thời gian nào?
+User: 8 giờ
+CVA: Trong bao lâu?
+User: 5 giờ
+CVA: Xong. cuộc họp lúc 08 giờ hôm nay đã được tạo.
+
+User: đi họp lúc 5 giờ sáng mai
+CVA: Trong bao lâu?
+User: trong 1 giờ
+CVA: Xong. họp lúc 05 giờ ngày 14 tháng 5 đã được tạo.
+
+User: nhắc tôi đi chợ lúc 9 giờ sáng mai.
+CVA: Bạn muốn đặt tên sự kiện này là gì?
+
+User: nhắc tôi uống nước
+CVA: Trong thời gian nào?
+User: 8 giờ tối nay.
+CVA: Xong. uống nước lúc 20 giờ ngày 13 tháng 5 đã được tạo.
+
+User: hủy lịch họp chiều nay.
+CVA: Tôi không tìm được sự kiện nào như thế trong lịch.
+
+User: hủy lịch họp ngày mai.
+CVA: Bạn có chắc muốn hủy sự kiện Họp diễn ra vào lúc 11 giờ ngày 14 tháng 5 không?
+User: có
+CVA: Đã hủy sự kiện.
+
+User: hủy lịch họp ngày mai.
+CVA: Bạn có chắc muốn hủy sự kiện Họp diễn ra vào lúc 11 giờ ngày 14 tháng 5 không?
+User: không
+CVA: OK, lịch của bạn vẫn được giữ nguyên.
+

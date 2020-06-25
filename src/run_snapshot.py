@@ -40,14 +40,16 @@ with open('snapshots/user_snapshot.txt', mode='r', encoding='utf-8') as file:
             user_snapshot.append(user_conversation)
             user_conversation = []
 
-with open('snapshots/cva_snapshot.txt', mode='w', encoding='utf-8') as file:
+with open('snapshots/conversation_snapshot.txt', mode='w', encoding='utf-8') as file:
     while True:
         if len(user_snapshot) == 0:
             break
         user_conversation = user_snapshot.pop(0)
         for utter in user_conversation:
+            utter = utter.strip()
             cva_response = cva(utter)[0][1]
-            file.write(cva_response + '\n')
+            file.write('User: {}\n'.format(utter))
+            file.write('CVA: {}\n'.format(cva_response))
         file.write('\n')
         cva.manager.reset_state()
 
