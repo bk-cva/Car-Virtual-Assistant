@@ -3,7 +3,6 @@ from datetime import datetime, timedelta, date
 from typing import List, Dict, Tuple
 
 from .dialog_state_tracker import FeaturizedTracker
-from .response_selector import ResponseSelector
 from .state import State
 from .normalization import NormalEntity, normalize_date, normalize_time_range, normalize_time, normalize_duration
 from src.nlu.intent import Intent
@@ -17,7 +16,7 @@ logger.setLevel(logging.DEBUG)
 
 
 class DialogManager:
-    def __init__(self, selector: ResponseSelector):
+    def __init__(self):
         self.here_api = HereSDK()
         self.schedule_api = ScheduleSDK()
         self.fsm = State.START
@@ -26,7 +25,6 @@ class DialogManager:
         self.tracker = FeaturizedTracker(['place', 'place_property', 'route_property', 'info_type',
                                           'address', 'street', 'ward', 'district',
                                           'activity', 'event', 'number', 'date', 'time', 'duration'])
-        self.selector = selector
 
     def reset_state(self):
         self._set_state(State.START)

@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from src.dialog_manager.dialog_manager import DialogManager
 from src.dialog_manager.normalization import normalize
-from src.dialog_manager.response_selector import FirstItemSelector
 from src.nlg import NLG
 from src.utils import call_nlu, NluException
 
@@ -15,7 +14,7 @@ logger.setLevel(logging.DEBUG)
 
 class CVA:
     def __init__(self):
-        self.manager = DialogManager(FirstItemSelector())
+        self.manager = DialogManager()
         self.nlg = NLG()
 
     def reset(self):
