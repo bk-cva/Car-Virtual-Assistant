@@ -1,7 +1,7 @@
 Địa điểm bạn muốn tìm là Trường Đại Học Bách Khoa.
 
 Địa điểm bạn muốn tìm là Trường Đại Học Bách Khoa.
-Bạn muốn đặt tên sự kiện này là gì?
+Tôi đã tìm được đường đến Trường Đại Học Bách Khoa.
 
 Tôi đã tìm được đường đến Trường Đại Học Bách Khoa.
 Tôi tìm được 3 địa điểm liên quan.
@@ -13,7 +13,7 @@ Nó nằm ở Phường 14.
 
 Tôi đã tìm được đường đến Trạm Xăng Số 11.
 
-Bạn đang ở gần đường Lý Thường Kiệt Phường 15 Quận 11.
+Bạn đang ở gần đường Lý Thường Kiệt Phường 14 Quận 10.
 
 Đường đến số 268 đường Điện Biên Phủ đang hiển thị trên bản đồ.
 
@@ -23,7 +23,7 @@ Có 1 sự kiện trong ngày 14 tháng 05.
 
 Không có sự kiện trong ngày 15 tháng 05.
 
-Không có sự kiện.
+Không có sự kiện từ 13 giờ ngày 13 tháng 5 đến 18 giờ ngày 13 tháng 5.
 
 Trong bao lâu?
 Xong. cuộc họp lúc 17 giờ hôm nay đã được tạo.
