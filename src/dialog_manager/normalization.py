@@ -1,10 +1,13 @@
 import re
-from datetime import date, timedelta, datetime, time
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Tuple
 
 from src.proto.rest_api_pb2 import Entity
 from src.nlu.intent import Intent
+from src.common.config_manager import ConfigManager
 
+
+TIMEZONE = list(map(int, ConfigManager().get('TIMEZONE', '+07:00').split(':')))
 
 NORMALIZE_ENTITY_DICT = {
     'number': {
@@ -58,6 +61,10 @@ class NormalEntity:
     def __init__(self, name=None, value=None):
         self.name = name
         self.value = value
+
+
+def now():
+    return datetime.now(tz=timezone(timedelta(hours=TIMEZONE[0], minutes=TIMEZONE[1])))
 
 
 def normalize_date(entity: str) -> date:
@@ -145,7 +152,7 @@ def normalize_time_range(entity: str) -> Tuple[time, time]:
         enhenced_info = after_time.group('v')
         if enhenced_info in TYPE_SPACE_LIST:
             start_time, end_time = time_to_time_space(clock, type_space=enhenced_info)
-            current_time = datetime.now().time()
+            current_time = now().time()
             if start_time < current_time and (clock < 12):
                 start_time = (datetime.combine(date.today(), start_time) + timedelta(hours=12)).time()
                 end_time = (datetime.combine(date.today(), end_time) + timedelta(hours=12)).time()
@@ -198,7 +205,7 @@ def normalize_time_range(entity: str) -> Tuple[time, time]:
             hours = int(oclock_time.group('h2'))
             mins = 0
         start_time, end_time = time_to_time_space(hours=hours, mins=mins)
-        current_time = datetime.now().time()
+        current_time = now().time()
         if start_time < current_time and (hours < 12):
             start_time = (datetime.combine(date.today(), start_time) + timedelta(hours=12)).time()
             end_time = (datetime.combine(date.today(), end_time) + timedelta(hours=12)).time()
@@ -236,7 +243,7 @@ def normalize_time(entity: str) -> time:
             hours = int(oclock_time.group('h2'))
             mins = 0
         start_time = time(hours, mins)
-        current_time = datetime.now().time()
+        current_time = now().time()
         if start_time < current_time and (hours < 12):
             start_time = (datetime.combine(date.today(), start_time) + timedelta(hours=12)).time()
         return start_time

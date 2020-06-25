@@ -18,5 +18,5 @@ class ConfigManager(metaclass=Singleton):
         load_dotenv()
 
     @staticmethod
-    def get(key: str):
-        return getenv(key)
+    def get(key: str, default=None):
+        return getenv(key, default)

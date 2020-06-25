@@ -1,6 +1,6 @@
 import os
 import logging
-from datetime import date
+from datetime import date, datetime
 from unittest.mock import patch
 
 from src.cva import CVA
@@ -17,6 +17,10 @@ mock_date_patcher = patch('src.dialog_manager.normalization.date')
 mock_date = mock_date_patcher.start()
 mock_date.today.return_value = date(2020, 5, 13)
 mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+
+mock_now_patcher = patch('src.dialog_manager.normalization.now')
+mock_now = mock_now_patcher.start()
+mock_now.return_value = datetime(2020, 5, 13, 7, 0, 0)
 
 os.environ['SCHEDULE_API_DRY_RUN'] = 'true'
 
