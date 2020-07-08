@@ -20,6 +20,10 @@ SELECT_ITEM_REGEX = [
     r'cái (?P<number>đầu tiên)',
 ]
 
+MUSIC_REGEX = [
+    r'^mở bài (?P<song_name>[\w\s]+)$'
+]
+
 YES_REGEX = [
     r'^có$',
     r'^ok$',

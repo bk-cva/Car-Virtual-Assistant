@@ -4,7 +4,7 @@ from typing import List, Tuple
 from .intent import Intent
 from src.proto.rest_api_pb2 import Entity
 from .bert.predict import BertPredictor
-from .regexes import PHONE_CALL_REGEX, PHONE_TEXT_REGEX, SELECT_ITEM_REGEX, YES_REGEX, NO_REGEX
+from .regexes import PHONE_CALL_REGEX, PHONE_TEXT_REGEX, SELECT_ITEM_REGEX, MUSIC_REGEX, YES_REGEX, NO_REGEX
 
 
 class NLU:
@@ -19,6 +19,7 @@ class NLU:
             (PHONE_CALL_REGEX, Intent.phone_call),
             (PHONE_TEXT_REGEX, Intent.phone_text),
             (SELECT_ITEM_REGEX, Intent.select_item),
+            (MUSIC_REGEX, Intent.music),
             (YES_REGEX, Intent.yes),
             (NO_REGEX, Intent.no),
         ]
