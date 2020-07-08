@@ -120,6 +120,29 @@ class NLG:
         elif action == 'respond_cancel_schedule_alt':
             response = 'Đã có lỗi xảy ra. Có thể là do mạng không ổn định. Bạn hãy thử lại sau nhé.'
 
+        elif action == 'respond_control_aircon':
+            action_type = 'bật' if substitutes['action_type'] == 1 else 'tắt'
+            response = 'Điều hòa đã được {}'.format(action_type)
+
+        elif action == 'respond_control_door':
+            action_type = 'mở' if substitutes['action_type'] == 1 else 'đóng'
+            response = 'Cửa đã được {}'.format(action_type)
+
+        elif action == 'respond_control_window':
+            action_type = 'mở' if substitutes['action_type'] == 1 else 'đóng'
+            response = 'Cửa sổ đã được {}'.format(action_type)
+
+        elif action == 'respond_control_radio':
+            action_type = 'bật' if substitutes['action_type'] == 1 else 'tắt'
+            response = 'Đài {} đã được {}'.format(
+                substitutes['radio_channel'], action_type)
+
+        elif action == 'ask_song':
+            response = 'Bạn muốn nghe bài gì?'
+
+        elif action == 'respond_music':
+            response = 'Bài mà bạn yêu cầu đã có. Chúc bạn nghe nhạc vui vẻ :D!'
+
         else:
             logger.warning('No template found for \'{}\', use default.'.format(action))
             return action, 'Đã xảy ra lỗi.'

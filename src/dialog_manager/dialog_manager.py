@@ -24,7 +24,8 @@ class DialogManager:
         self.cached = {}
         self.tracker = FeaturizedTracker(['place', 'place_property', 'route_property', 'info_type',
                                           'address', 'street', 'ward', 'district',
-                                          'activity', 'event', 'number', 'date', 'time', 'duration'])
+                                          'activity', 'event', 'number', 'date', 'time', 'duration',
+                                          'action_type', 'radio_channel', 'song_name', 'music_genre', 'musician'])
 
     def reset_state(self):
         self._set_state(State.START)
@@ -48,6 +49,16 @@ class DialogManager:
                 self._set_state(State.CREATE_SCHEDULE)
             elif intent == Intent.cancel_schedule:
                 self._set_state(State.CANCEL_SCHEDULE)
+            elif intent == Intent.control_aircon:
+                self._set_state(State.CONTROL_AIRCON)
+            elif intent == Intent.control_door:
+                self._set_state(State.CONTROL_DOOR)
+            elif intent == Intent.control_window:
+                self._set_state(State.CONTROL_WINDOW)
+            elif intent == Intent.control_radio:
+                self._set_state(State.CONTROL_RADIO)
+            elif intent == Intent.music:
+                self._set_state(State.MUSIC)
             else:
                 return 'intent_not_found', {}
 
@@ -379,6 +390,59 @@ class DialogManager:
             except Exception:
                 self._set_state(State.START)
                 return 'respond_cancel_schedule_alt', {}
+
+        elif self.fsm == State.CONTROL_AIRCON:
+            self.tracker.reset_state()
+            self.tracker.update_state(entities_list)
+            self._set_state(State.START)
+            return 'respond_control_aircon', {'action_type': self.tracker.get_state('action_type', 0)}
+
+        elif self.fsm == State.CONTROL_DOOR:
+            self.tracker.reset_state()
+            self.tracker.update_state(entities_list)
+            self._set_state(State.START)
+            return 'respond_control_door', {'action_type': self.tracker.get_state('action_type', 0)}
+
+        elif self.fsm == State.CONTROL_WINDOW:
+            self.tracker.reset_state()
+            self.tracker.update_state(entities_list)
+            self._set_state(State.START)
+            return 'respond_control_window', {'action_type': self.tracker.get_state('action_type', 0)}
+
+        elif self.fsm == State.CONTROL_RADIO:
+            self.tracker.reset_state()
+            self.tracker.update_state(entities_list)
+            self._set_state(State.START)
+            return 'respond_control_radio', {
+                'action_type': self.tracker.get_state('action_type', 0),
+                'radio_channel': self.tracker.get_state('radio_channel', 'VOV1')
+            }
+
+        elif self.fsm == State.MUSIC:
+            self.tracker.reset_state()
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
+            if 'song_name' in current_state:
+                data = {'song_name': current_state.get('song_name')}
+            elif 'music_genre' in current_state:
+                data = {'music_genre': current_state.get('music_genre')}
+            elif 'musician' in current_state:
+                data = {'musician': current_state.get('musician')}
+            else:
+                self._set_state(State.ASK_SONG)
+                return 'ask_song', {}
+            self._set_state(State.START)
+            return 'respond_music', data
+
+        elif self.fsm == State.ASK_SONG:
+            self.tracker.update_state(entities_list)
+            current_state = self.tracker.get_state()
+            if 'song_name' in current_state or \
+                'music_genre' in current_state or \
+                'musician' in current_state:
+                self._set_state(State.MUSIC)
+            else:
+                self._set_state(State.START)
 
         else:
             raise Exception('Unexpected state {}'.format(self.fsm))

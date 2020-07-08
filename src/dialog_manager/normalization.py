@@ -28,6 +28,10 @@ NORMALIZE_ENTITY_DICT = {
     },
     'place_property': {
         'gần nhất': ['gần nhất', 'gần đây nhất', 'xung quanh', 'gần đây']
+    },
+    'action_type': {
+        1: ['mở', 'bật', 'nâng'],
+        0: ['tắt', 'đóng', 'hạ']
     }
 }
 
