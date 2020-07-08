@@ -1,3 +1,5 @@
+from .intent import Intent
+
 PHONE_CALL_REGEX = [
     r'^gọi điện thoại cho (?P<person_name>[\w\s]+)',
     r'^gọi điện thoại tới (?P<person_name>[\w\s]+)',
@@ -33,4 +35,13 @@ YES_REGEX = [
 
 NO_REGEX = [
     r'^không$',
+]
+
+regex_list = [
+    (PHONE_CALL_REGEX, Intent.phone_call),
+    (PHONE_TEXT_REGEX, Intent.phone_text),
+    (SELECT_ITEM_REGEX, Intent.select_item),
+    (MUSIC_REGEX, Intent.music),
+    (YES_REGEX, Intent.yes),
+    (NO_REGEX, Intent.no),
 ]

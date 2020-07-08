@@ -4,6 +4,7 @@ from unittest.mock import patch
 from datetime import date
 
 from .nlu import NLU
+from .intent import Intent
 from src.proto.rest_api_pb2 import Entity
 
 
@@ -12,6 +13,34 @@ def new_entity(name, value):
     entity.name = name
     entity.value = value
     return entity
+
+
+class TestPredictIntentByRegex(unittest.TestCase):
+    def test_intent_select_item(self):
+        intent = NLU.predict_intent_by_regex('cái thứ nhất')
+        self.assertEqual(intent, Intent.select_item)
+
+    def test_intent_yes(self):
+        intent = NLU.predict_intent_by_regex('có')
+        self.assertEqual(intent, Intent.yes)
+
+    def test_intent_unknown(self):
+        intent = NLU.predict_intent_by_regex('hihihi')
+        self.assertEqual(intent, None)
+
+
+class TestPredictNerByRegex(unittest.TestCase):
+    def test_ner_select_item(self):
+        entities = NLU.predict_ner_by_regex('cái thứ nhất')
+        self.assertListEqual(entities, [new_entity('number', 'nhất')])
+
+    def test_ner_yes(self):
+        entities = NLU.predict_ner_by_regex('có')
+        self.assertListEqual(entities, [])
+
+    def test_ner_unknown(self):
+        entities = NLU.predict_ner_by_regex('hihihi')
+        self.assertEqual(entities, [])
 
 
 class TestConvertBertPredictionsToEntitiesList(unittest.TestCase):
