@@ -16,16 +16,6 @@ PHONE_TEXT_REGEX = [
     r'^nhắn (?P<person_name>[\w\s]+) rằng (?P<message>[\w\s]+)',
 ]
 
-SELECT_ITEM_REGEX = [
-    r'cái thứ (?P<number>\w+)$',
-    r'cái số (?P<number>\w+)$',
-    r'cái (?P<number>đầu tiên)',
-]
-
-MUSIC_REGEX = [
-    r'^mở bài (?P<song_name>[\w\s]+)$'
-]
-
 YES_REGEX = [
     r'^có$',
     r'^ok$',
@@ -40,8 +30,6 @@ NO_REGEX = [
 regex_list = [
     (PHONE_CALL_REGEX, Intent.phone_call),
     (PHONE_TEXT_REGEX, Intent.phone_text),
-    (SELECT_ITEM_REGEX, Intent.select_item),
-    (MUSIC_REGEX, Intent.music),
     (YES_REGEX, Intent.yes),
     (NO_REGEX, Intent.no),
 ]
