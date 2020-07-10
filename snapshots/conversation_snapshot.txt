@@ -38,7 +38,7 @@ User: lịch ngày mốt tôi có việc gì không?
 CVA: Không có sự kiện trong ngày 15 tháng 05.
 
 User: chiều nay có họp không?
-CVA: Không có sự kiện từ 13 giờ ngày 13 tháng 5 đến 18 giờ ngày 13 tháng 5.
+CVA: Trong bao lâu?
 
 User: tạo cuộc họp lúc 5 giờ
 CVA: Trong bao lâu?
@@ -63,7 +63,7 @@ User: trong 1 giờ
 CVA: Xong. họp lúc 05 giờ ngày 14 tháng 5 đã được tạo.
 
 User: nhắc tôi đi chợ lúc 9 giờ sáng mai.
-CVA: Bạn muốn đặt tên sự kiện này là gì?
+CVA: Xong. chợ lúc 09 giờ ngày 14 tháng 5 đã được tạo.
 
 User: nhắc tôi uống nước
 CVA: Trong thời gian nào?
