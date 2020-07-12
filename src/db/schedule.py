@@ -70,7 +70,6 @@ class ScheduleSDK:
             if not self.dry_run:
                 res = requests.delete(self.url + '/calendar/event', json=payload)
                 res.raise_for_status()
-                return res.json()
         except Exception as e:
             logger.exception(str(e))
             raise e
