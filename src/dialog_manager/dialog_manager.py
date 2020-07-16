@@ -25,7 +25,10 @@ class DialogManager:
         self.tracker = FeaturizedTracker(['place', 'place_property', 'route_property', 'info_type',
                                           'address', 'street', 'ward', 'district',
                                           'activity', 'event', 'number', 'date', 'time', 'duration',
-                                          'action_type', 'radio_channel', 'song_name', 'music_genre', 'musician'])
+                                          'action_type',
+                                          'radio_channel',
+                                          'song_name', 'music_genre', 'musician',
+                                          'side'])
 
     def reset_state(self):
         self._set_state(State.START)
@@ -402,13 +405,19 @@ class DialogManager:
             self.tracker.reset_state()
             self.tracker.update_state(entities_list)
             self._set_state(State.START)
-            return 'respond_control_door', {'action_type': self.tracker.get_state('action_type', 0)}
+            return 'respond_control_door', {
+                'action_type': self.tracker.get_state('action_type', 0),
+                'side': self.tracker.get_state('side', -1)
+            }
 
         elif self.fsm == State.CONTROL_WINDOW:
             self.tracker.reset_state()
             self.tracker.update_state(entities_list)
             self._set_state(State.START)
-            return 'respond_control_window', {'action_type': self.tracker.get_state('action_type', 0)}
+            return 'respond_control_window', {
+                'action_type': self.tracker.get_state('action_type', 0),
+                'side': self.tracker.get_state('side', -1)
+            }
 
         elif self.fsm == State.CONTROL_RADIO:
             self.tracker.reset_state()

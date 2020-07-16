@@ -30,8 +30,12 @@ NORMALIZE_ENTITY_DICT = {
         'gần nhất': ['gần nhất', 'gần đây nhất', 'xung quanh', 'gần đây']
     },
     'action_type': {
+        0: ['tắt', 'đóng', 'nâng'],
         1: ['mở', 'bật', 'hạ'],
-        0: ['tắt', 'đóng', 'nâng']
+    },
+    'side': {
+        0: ['trái'],
+        1: ['phải'],
     }
 }
 
@@ -276,6 +280,7 @@ def normalize(intent: Intent, entity: Entity) -> NormalEntity:
     result = NormalEntity(entity.name, entity.value)
     if result.name in NORMALIZE_ENTITY_DICT:
         for normalized_value, possible_values in NORMALIZE_ENTITY_DICT[result.name].items():
-            if result.value in possible_values:
+            if result.value.lower() in possible_values:
                 result.value = normalized_value
+                break
     return result
