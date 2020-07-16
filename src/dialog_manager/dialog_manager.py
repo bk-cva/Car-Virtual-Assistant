@@ -186,6 +186,7 @@ class DialogManager:
                 self._set_state(State.START)
 
         elif self.fsm == State.ROUTE:
+            self.tracker.reset_state()
             self.tracker.update_state(entities_list)
             current_state = self.tracker.get_state()
             if 'place' in current_state or 'activity' in current_state:
