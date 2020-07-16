@@ -1,10 +1,15 @@
-import os.path
 import pickle
-from absl import logging
+import logging
+import os.path
+import numpy as np
 import tensorflow as tf
 
 from .modeling import BertConfig, BertModel, get_assignment_map_from_checkpoint
 from .tokenization import convert_to_unicode, FullTokenizer
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class InputExample(object):
@@ -140,7 +145,7 @@ def create_model(bert_config, is_training, input_ids, mask,
         256, activation='relu', name='intent/hiddens')(mean_layer)
     logits = tf.keras.layers.Dense(
         num_intent_labels, activation=None, name='intent/outputs')(hidden_layer)
-    intent_predict = tf.math.argmax(logits, axis=-1)
+    intent_predict = tf.nn.softmax(logits)
     return ner_predict, intent_predict
 
 
@@ -186,13 +191,6 @@ class BertPredictor:
         (assignment_map, initialized_variable_names) = get_assignment_map_from_checkpoint(
             tvars, self.init_checkpoint)
         tf.train.init_from_checkpoint(self.init_checkpoint, assignment_map)
-        logging.info("**** Trainable Variables ****")
-        for var in tvars:
-            init_string = ""
-            if var.name in initialized_variable_names:
-                init_string = ", *INIT_FROM_CKPT*"
-            logging.info("  name = %s, shape = %s%s", var.name, var.shape,
-                         init_string)
 
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
@@ -206,18 +204,27 @@ class BertPredictor:
             self.input_ids: [feature.input_ids],
             self.mask: [feature.mask],
         })
+        ner_prediction = ner_predictions[0]
+        intent_prediction = intent_predictions[0]
 
-        ner_results = []
-        for i, prediction in enumerate(ner_predictions[0]):
-            token = ntokens[i]
+        logger.debug('Intent probabilities:')
+        for intent_id, intent_label in self.intents_id2label.items():
+            logger.debug('    - %-20s= %.3f', intent_label, intent_prediction[intent_id])
+        
+        intent_result = self.intents_id2label[np.argmax(intent_prediction)]
+        ner_result = self.convert_bert_output_to_ner_result(ner_prediction, ntokens)
+
+        return intent_result, ner_result
+
+    def convert_bert_output_to_ner_result(self, ner_prediction, ntokens):
+        ner_result = []
+        for prediction, token in zip(ner_prediction, ntokens):
             predict = self.entities_id2label[prediction]
             if token != "[PAD]" and token != "[CLS]":
                 if token.startswith("##"):
-                    ner_results[-1][1] += token[2:]
-                    continue
-                if predict == 'X':
-                    ner_results[-1][1] += token
-                    continue
-                ner_results.append([predict, token])
-
-        return self.intents_id2label[intent_predictions[0]], ner_results
+                    ner_result[-1][1] += token[2:]
+                elif predict == 'X':
+                    ner_result[-1][1] += token
+                else:
+                    ner_result.append([predict, token])
+        return ner_result

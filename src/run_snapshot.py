@@ -7,6 +7,7 @@ from datetime import date, datetime
 from unittest.mock import patch
 
 from src.cva import CVA
+from src.config_manager import ConfigManager
 
 
 fh = logging.FileHandler('debug-snapshot.log')
@@ -26,7 +27,9 @@ mock_now = mock_now_patcher.start()
 mock_now.return_value = datetime(2020, 5, 13, 7, 0, 0)
 
 
-cva = CVA()
+do_call_external_nlu = ConfigManager().get('DO_CALL_EXTERNAL_NLU') == 'true'
+cva = CVA(do_call_external_nlu=do_call_external_nlu)
+
 user_snapshot = []
 with open('snapshots/user_snapshot.txt', mode='r', encoding='utf-8') as file:
     user_conversation = []
