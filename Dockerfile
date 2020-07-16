@@ -11,7 +11,7 @@ COPY requirements.txt /app
 RUN pip install --no-cache -r requirements.txt
 
 RUN wget --no-check-certificate -O nlu_models.tar.gz \
-    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212483\&authkey\=AEFs_xFyJaiLd-Q \
+    https://onedrive.live.com/download\?cid\=4876FFBE6BC163A8\&resid\=4876FFBE6BC163A8%212487\&authkey\=APeOuOkRDcVBY3o \
     && tar -xzvf nlu_models.tar.gz -C / \
     && rm nlu_models.tar.gz
 
