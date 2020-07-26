@@ -10,8 +10,10 @@ services:
     depends_on:
       - redis
     volumes:
-      - "./debug.log:/app/debug.log"
-      - "./src:/app/src"
+      - "./:/app/"
+    command: "/bin/bash"
+    stdin_open: true
+    tty: true
 
   redis:
     image: redis
