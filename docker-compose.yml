@@ -11,9 +11,6 @@ services:
       - redis
     volumes:
       - "./:/app/"
-    command: "/bin/bash"
-    stdin_open: true
-    tty: true
 
   redis:
     image: redis
