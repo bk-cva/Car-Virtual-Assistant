@@ -42,24 +42,34 @@ class DialogManager:
         if self.fsm == State.START:
             if intent == Intent.location:
                 self._set_state(State.LOCATION)
+
             elif intent == Intent.path:
                 self._set_state(State.ROUTE)
+
             elif intent == Intent.request_schedule:
                 self._set_state(State.REQUEST_SCHEDULE)
+
             elif intent == Intent.create_schedule:
                 self._set_state(State.CREATE_SCHEDULE)       
+
             elif intent == Intent.remind:
                 self._set_state(State.CREATE_SCHEDULE)
+
             elif intent == Intent.cancel_schedule:
                 self._set_state(State.CANCEL_SCHEDULE)
+
             elif intent == Intent.control_aircon:
                 self._set_state(State.CONTROL_AIRCON)
+
             elif intent == Intent.control_door:
                 self._set_state(State.CONTROL_DOOR)
+
             elif intent == Intent.control_window:
                 self._set_state(State.CONTROL_WINDOW)
+
             elif intent == Intent.control_radio:
                 self._set_state(State.CONTROL_RADIO)
+
             elif intent == Intent.music:
                 self._set_state(State.MUSIC)
             else:
@@ -198,6 +208,7 @@ class DialogManager:
                 self._set_state(State.FIND_ADDRESS)
             else:
                 self._set_state(State.ASK_PLACE)
+                return 'ask_place', {}
 
         elif self.fsm == State.ASK_PLACE:
             self.tracker.update_state(entities_list)
@@ -205,7 +216,7 @@ class DialogManager:
             if 'place' in current_state:
                 self._set_state(State.FIND_LOCATION)
             else:
-                return 'ask_place', {}
+               self._set_state(State.START)
 
         elif self.fsm == State.FIND_ROUTE:
             self._set_state(State.START)
