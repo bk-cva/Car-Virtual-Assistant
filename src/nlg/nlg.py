@@ -104,7 +104,8 @@ class NLG:
             response = 'Tôi không tìm được sự kiện nào như thế trong lịch.'
 
         elif action == 'select_schedule':
-            response = 'Tôi tìm được {} sự kiện. Bạn hãy chọn sự kiện mà bạn muốn hủy.'.format(len(substitutes['schedules']))
+            response = 'Tôi tìm được {} sự kiện. Bạn hãy chọn sự kiện mà bạn muốn hủy.'.format(
+                len(substitutes['events']))
 
         elif action == 'ask_cancel':
             event = substitutes['events'][0]
