@@ -364,15 +364,15 @@ class DialogManager:
                 time_max = time_min + timedelta(1)
             items = self.schedule_api.request_schedule(
                 time_min=time_min, time_max=time_max)
-            self.cached['schedules'] = items
+            self.cached['events'] = items
             if len(items) == 0:
                 self._set_state(State.NO_SCHEDULE)
             elif len(items) == 1:
                 self._set_state(State.ASK_CANCEL)
-                return 'ask_cancel', {'schedule': items[0]}
+                return 'ask_cancel', {'events': [items[0]]}
             else:
                 self._set_state(State.SELECT_SCHEDULE)
-                return 'select_schedule', {'schedules': items}
+                return 'select_schedule', {'events': items}
 
         elif self.fsm == State.NO_SCHEDULE:
             return 'no_schedule', {}
@@ -381,7 +381,7 @@ class DialogManager:
             if intent == Intent.select_item:
                 self.tracker.update_state(entities_list)
                 self._set_state(State.ASK_CANCEL)
-                return 'ask_cancel', {'schedule': self.cached['schedules'][self.tracker.get_state('number')]}
+                return 'ask_cancel', {'events': [self.cached['events'][self.tracker.get_state('number')]]}
             else:
                 self._set_state(State.START)
 
@@ -397,7 +397,7 @@ class DialogManager:
             return 'abort_cancel', {}
 
         elif self.fsm == State.CALL_CANCEL_SCHEDULE:
-            schedule = self.cached['schedules'][self.tracker.get_state('number', 0)]
+            schedule = self.cached['events'][self.tracker.get_state('number', 0)]
             try:
                 self.schedule_api.cancel_schedule(schedule.id)
                 self._set_state(State.START)
